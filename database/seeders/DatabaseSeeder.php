@@ -15,11 +15,38 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
+        // Exécuter les seeders dans l'ordre logique
+        $this->call([
+            RolesAndPermissionsSeeder::class,
+            AcademicYearSeeder::class,  // Ajout du seeder pour les années académiques
+            AcademicStructureSeeder::class,
+            SubjectSeeder::class,
+            UsersAndStudentsSeeder::class,
+            EnrollmentSeeder::class,
+            TeacherAssignmentSeeder::class,
+            // MODULE 8 — NOTES & ÉVALUATIONS
+            GradePeriodSeeder::class,
+            EvaluationSeeder::class,
+            GradeSeeder::class,
+        ]);
 
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
+        // Créer l'utilisateur administrateur principal
+        $superAdmin = User::create([
+            'name' => 'Super Administrateur',
+            'email' => 'admin@enmaschool.com',
+            'password' => bcrypt('password123'),
+        ]);
+        // Assigner le rôle super_admin à l'utilisateur
+        $superAdmin->assignRole('super_admin');
+        
+        // Créer le profil staff pour l'admin
+        \App\Models\Staff::create([
+            'user_id' => $superAdmin->id,
+            'first_name' => 'Admin',
+            'last_name' => 'Système',
+            'position' => 'Directeur Général',
+            'phone' => '123-456-7890',
+            'status' => 'active',
         ]);
     }
 }
