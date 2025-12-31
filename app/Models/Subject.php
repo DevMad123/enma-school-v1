@@ -3,23 +3,66 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use App\Traits\HasSchoolContext;
 
 class Subject extends Model
 {
+    use HasSchoolContext;
+
     protected $fillable = [
+        // Anciens champs (compatibilité)
         'name',
         'code',
         'coefficient',
+        // Nouveaux champs MODULE A3
+        'school_id',
+        'level_id',
+        'academic_track_id',
+        'credit',
+        'volume_hour',
+        'is_active',
+    ];
+
+    protected $casts = [
+        'coefficient' => 'decimal:1',
+        'credit' => 'integer',
+        'volume_hour' => 'integer',
+        'is_active' => 'boolean',
     ];
 
     /**
-     * Relation many-to-many avec les niveaux
+     * Relation many-to-many avec les niveaux (legacy)
      */
     public function levels(): BelongsToMany
     {
         return $this->belongsToMany(Level::class, 'level_subject');
+    }
+
+    /**
+     * Relation avec l'école (MODULE A3)
+     */
+    public function school(): BelongsTo
+    {
+        return $this->belongsTo(School::class);
+    }
+
+    /**
+     * Relation avec le niveau académique (MODULE A3)
+     */
+    public function level(): BelongsTo
+    {
+        return $this->belongsTo(Level::class);
+    }
+
+    /**
+     * Relation avec la filière/parcours (MODULE A3)
+     */
+    public function academicTrack(): BelongsTo
+    {
+        return $this->belongsTo(AcademicTrack::class);
     }
 
     /**
@@ -235,5 +278,85 @@ class Subject extends Model
     public function isTaughtInLevel($levelId): bool
     {
         return $this->levels()->where('levels.id', $levelId)->exists();
+    }
+
+    // ==================== SCOPES MODULE A3 ====================
+
+    /**
+     * Scope pour les matières actives
+     */
+    public function scopeActive($query)
+    {
+        return $query->where('is_active', true);
+    }
+
+    /**
+     * Scope par école
+     */
+    public function scopeForSchool($query, $schoolId)
+    {
+        return $query->where('school_id', $schoolId);
+    }
+
+    /**
+     * Scope par niveau académique (MODULE A3)
+     */
+    public function scopeForAcademicLevel($query, $levelId)
+    {
+        return $query->where('level_id', $levelId);
+    }
+
+    /**
+     * Scope par filière
+     */
+    public function scopeForTrack($query, $trackId)
+    {
+        return $query->where('academic_track_id', $trackId);
+    }
+
+    /**
+     * Scope pour le secondaire
+     */
+    public function scopeSecondary($query)
+    {
+        return $query->whereHas('level', function ($q) {
+            $q->where('type', 'secondary');
+        });
+    }
+
+    /**
+     * Scope pour l'universitaire
+     */
+    public function scopeUniversity($query)
+    {
+        return $query->whereHas('level', function ($q) {
+            $q->where('type', 'university');
+        });
+    }
+
+    // ==================== ACCESSORS MODULE A3 ====================
+
+    /**
+     * Nom complet de la matière
+     */
+    public function getFullNameAttribute(): string
+    {
+        return $this->code ? "{$this->code} - {$this->name}" : $this->name;
+    }
+
+    /**
+     * Type basé sur le niveau (secondaire/université)
+     */
+    public function getTypeAttribute(): string
+    {
+        return $this->level ? $this->level->type : 'secondary';
+    }
+
+    /**
+     * Vérifie si c'est une nouvelle matière MODULE A3
+     */
+    public function isModuleA3Subject(): bool
+    {
+        return !is_null($this->school_id) && !is_null($this->level_id);
     }
 }

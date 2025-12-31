@@ -1,16 +1,36 @@
-@extends('layouts.app')
+@extends('layouts.dashboard')
 
-@section('title', 'Gestion Financière - Enma School')
-
-@section('header')
-    <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-        {{ __('Gestion Financière') }}
-    </h2>
-@endsection
+@section('title', 'Gestion Financière')
 
 @section('content')
-<div class="py-12">
-    <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+<!-- Page Header -->
+<div class="bg-white dark:bg-gray-800 shadow mb-6">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center py-6">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Gestion Financière</h1>
+                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Tableau de bord des finances et suivi des paiements</p>
+            </div>
+            <div class="flex space-x-3">
+                <a href="{{ route('finance.school-fees.index') }}" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition duration-150 inline-flex items-center">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/>
+                    </svg>
+                    Frais Scolaires
+                </a>
+                <a href="{{ route('finance.payments.index') }}" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition duration-150 inline-flex items-center">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 8h6m-6 4h6"/>
+                    </svg>
+                    Paiements
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="space-y-6">
+    <div class="max-w-7xl mx-auto">
         @if (session('success'))
             <div class="mb-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative">
                 {{ session('success') }}

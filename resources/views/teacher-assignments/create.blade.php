@@ -1,34 +1,32 @@
-<!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="csrf-token" content="{{ csrf_token() }}">
+@extends('layouts.dashboard')
 
-    <title>{{ config('app.name', 'Laravel') }}</title>
+@section('title', 'Nouvelle Affectation Enseignant')
 
-    <!-- Scripts -->
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
-</head>
-<body class="font-sans antialiased">
-    <div class="min-h-screen bg-gray-100 dark:bg-gray-900">
-        @include('layouts.navigation')
-
-        <!-- Page Heading -->
-        <header class="bg-white dark:bg-gray-800 shadow">
-            <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-                <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-                    Nouvelle Affectation Enseignant
-                </h2>
+@section('content')
+<!-- Page Header -->
+<div class="bg-white dark:bg-gray-800 shadow mb-6">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center py-6">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Nouvelle Affectation Enseignant</h1>
+                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Affecter un enseignant à une classe</p>
             </div>
-        </header>
+            <div class="flex space-x-3">
+                <a href="{{ route('teacher-assignments.index') }}" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg font-medium transition duration-150 inline-flex items-center">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                    </svg>
+                    Retour à la liste
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
 
-        <!-- Page Content -->
-        <main>
-            <div class="py-12">
-                <div class="max-w-3xl mx-auto sm:px-6 lg:px-8">
-                    <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
-                        <div class="p-6 text-gray-900 dark:text-gray-100">
+<div class="space-y-6">
+    <div class="max-w-4xl mx-auto">
+        <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
+            <div class="p-6 text-gray-900 dark:text-gray-100">
                             
                             @if ($errors->any())
                                 <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
@@ -138,11 +136,14 @@
                                 <!-- Boutons d'action -->
                                 <div class="flex items-center justify-end space-x-4">
                                     <a href="{{ route('teacher-assignments.index') }}" 
-                                       class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">
+                                       class="bg-gray-300 hover:bg-gray-400 text-gray-700 px-6 py-2 rounded-lg font-medium transition duration-150">
                                         Annuler
                                     </a>
                                     <button type="submit" 
-                                            class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                                            class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition duration-150 inline-flex items-center">
+                                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                        </svg>
                                         Créer l'affectation
                                     </button>
                                 </div>
@@ -152,7 +153,7 @@
                     </div>
                 </div>
             </div>
-        </main>
+        </div>
     </div>
 
     <script>
@@ -200,5 +201,4 @@
             });
         });
     </script>
-</body>
-</html>
+@endsection

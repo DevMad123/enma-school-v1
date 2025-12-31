@@ -13,6 +13,19 @@ class TeacherAssignment extends Model
         'academic_year_id',
         'class_id',
         'subject_id',
+        // MODULE A4 - Nouveaux champs
+        'assignment_type',
+        'start_date',
+        'end_date',
+        'weekly_hours',
+        'notes',
+        'is_active',
+    ];
+
+    protected $casts = [
+        'start_date' => 'date',
+        'end_date' => 'date',
+        'is_active' => 'boolean',
     ];
 
     /**
@@ -138,6 +151,37 @@ class TeacherAssignment extends Model
     {
         return $query->whereHas('academicYear', function ($q) {
             $q->where('is_active', true);
+        });
+    }
+
+    /**
+     * Scope pour les affectations actives (MODULE A4)
+     */
+    public function scopeActive($query)
+    {
+        return $query->where('is_active', true);
+    }
+
+    /**
+     * Scope pour un type d'affectation donné
+     */
+    public function scopeOfType($query, $type)
+    {
+        return $query->where('assignment_type', $type);
+    }
+
+    /**
+     * Scope pour les affectations en cours (selon dates)
+     */
+    public function scopeCurrent($query)
+    {
+        $today = now()->toDateString();
+        return $query->where(function ($q) use ($today) {
+            $q->whereNull('start_date')
+              ->orWhere('start_date', '<=', $today);
+        })->where(function ($q) use ($today) {
+            $q->whereNull('end_date')
+              ->orWhere('end_date', '>=', $today);
         });
     }
 

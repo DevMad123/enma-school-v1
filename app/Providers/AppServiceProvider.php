@@ -22,5 +22,10 @@ class AppServiceProvider extends ServiceProvider
     {
         // Fix pour les erreurs MySQL avec utf8mb4
         Schema::defaultStringLength(191);
+        
+        // Charger les helpers personnalisés
+        if (file_exists(app_path('helpers.php'))) {
+            require_once app_path('helpers.php');
+        }
     }
 }

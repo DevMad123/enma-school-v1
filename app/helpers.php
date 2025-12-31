@@ -139,3 +139,135 @@ if (!function_exists('student_status_badge')) {
         return $badges[$status] ?? $badges['active'];
     }
 }
+
+if (!function_exists('school')) {
+    /**
+     * Get the active school instance
+     *
+     * @return \App\Models\School|null
+     */
+    function school() {
+        return \App\Models\School::getActiveSchool();
+    }
+}
+
+if (!function_exists('school_setting')) {
+    /**
+     * Get a school setting value
+     *
+     * @param string $key
+     * @param mixed $default
+     * @return mixed
+     */
+    function school_setting($key, $default = null) {
+        $school = school();
+        return $school ? $school->getSetting($key, $default) : $default;
+    }
+}
+
+// ============================================================================
+// Module A6 - Supervision & Audits Helpers
+// ============================================================================
+
+if (!function_exists('activity_text')) {
+    /**
+     * Get human-readable activity text
+     *
+     * @param object $activity
+     * @return string
+     */
+    function activity_text($activity) {
+        return \App\Helpers\ActivityHelper::getActivityText($activity);
+    }
+}
+
+if (!function_exists('action_text')) {
+    /**
+     * Get human-readable action text
+     *
+     * @param string $action
+     * @return string
+     */
+    function action_text($action) {
+        return \App\Helpers\ActivityHelper::getActionText($action);
+    }
+}
+
+if (!function_exists('activity_color')) {
+    /**
+     * Get activity color class
+     *
+     * @param string $action
+     * @return string
+     */
+    function activity_color($action) {
+        return \App\Helpers\ActivityHelper::getActivityColor($action);
+    }
+}
+
+if (!function_exists('entity_icon')) {
+    /**
+     * Get entity icon
+     *
+     * @param string $entity
+     * @return string
+     */
+    function entity_icon($entity) {
+        return \App\Helpers\ActivityHelper::getEntityIcon($entity);
+    }
+}
+
+if (!function_exists('getActivityDescription')) {
+    /**
+     * Get human-readable description for activity logs
+     *
+     * @param \App\Models\ActivityLog $activity
+     * @return string
+     */
+    function getActivityDescription($activity) {
+        $actions = [
+            'created_evaluation' => 'a créé une évaluation',
+            'updated_evaluation' => 'a modifié une évaluation',
+            'deleted_evaluation' => 'a supprimé une évaluation',
+            'created_grade' => 'a ajouté une note',
+            'updated_grade' => 'a modifié une note',
+            'created_assignment' => 'a créé un devoir',
+            'updated_assignment' => 'a mis à jour un devoir',
+            'created_lesson' => 'a créé une leçon',
+            'uploaded_file' => 'a téléchargé un fichier',
+            'sent_message' => 'a envoyé un message',
+            'created_announcement' => 'a publié une annonce',
+            'joined_class' => 'a rejoint une classe',
+            'completed_assignment' => 'a terminé un devoir',
+            'submitted_homework' => 'a rendu un devoir',
+            'viewed_lesson' => 'a consulté une leçon',
+            'downloaded_resource' => 'a téléchargé une ressource',
+            'logged_in' => 's\'est connecté(e)',
+            'logged_out' => 's\'est déconnecté(e)',
+            'profile_updated' => 'a mis à jour son profil',
+            'password_changed' => 'a changé son mot de passe',
+        ];
+
+        $action = $activity->action ?? 'unknown_action';
+        $description = $actions[$action] ?? "a effectué l'action: " . $action;
+
+        // Ajouter des détails contextuels si disponibles
+        if ($activity->details && is_array($activity->details)) {
+            $details = $activity->details;
+            
+            if (isset($details['subject'])) {
+                $description .= " en " . $details['subject'];
+            }
+            
+            if (isset($details['class'])) {
+                $description .= " (classe: " . $details['class'] . ")";
+            }
+            
+            if (isset($details['grade']) && $action == 'created_grade') {
+                $description .= " (" . $details['grade'] . "/20)";
+            }
+        }
+
+        return $description;
+    }
+}

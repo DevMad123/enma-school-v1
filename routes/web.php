@@ -8,6 +8,14 @@ use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SecurityController;
+use App\Http\Controllers\Admin\AcademicYearController;
+// MODULE A4 - Contrôleurs du personnel
+use App\Http\Controllers\Admin\TeacherController;
+use App\Http\Controllers\Admin\TeacherAssignmentController as AdminTeacherAssignmentController;
+// MODULE A5 - Contrôleur des paramètres pédagogiques
+use App\Http\Controllers\Admin\PedagogicalSettingsController;
+// MODULE A6 - Contrôleur de supervision et audits
+use App\Http\Controllers\Admin\SupervisionController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -25,22 +33,29 @@ Route::middleware('auth')->group(function () {
     Route::prefix('settings')->name('settings.')->group(function () {
         Route::get('/', [SettingsController::class, 'index'])->name('index');
         
-        // Informations de l'école
+        // Informations de l'école (redirection vers gouvernance)
         Route::get('school', [SettingsController::class, 'school'])->name('school');
         Route::put('school', [SettingsController::class, 'updateSchool'])->name('school.update');
         
-        // Années scolaires
+        // Années scolaires (redirection vers gouvernance)
         Route::get('years', [SettingsController::class, 'years'])->name('years');
         Route::post('years', [SettingsController::class, 'storeYear'])->name('years.store');
-        Route::patch('years/{year}/archive', [SettingsController::class, 'archiveYear'])->name('years.archive');
         
-        // Système de notation
+        // Système de notation (redirection vers gouvernance)
         Route::get('grading', [SettingsController::class, 'grading'])->name('grading');
         Route::post('grading', [SettingsController::class, 'updateGrading'])->name('grading.update');
         
         // Paramètres financiers
         Route::get('financial', [SettingsController::class, 'financial'])->name('financial');
         Route::post('financial', [SettingsController::class, 'updateFinancial'])->name('financial.update');
+        
+        // Paramètres système
+        Route::get('system', [SettingsController::class, 'system'])->name('system');
+        Route::post('system', [SettingsController::class, 'updateSystem'])->name('system.update');
+        
+        // Paramètres de notifications
+        Route::get('notifications', [SettingsController::class, 'notifications'])->name('notifications');
+        Route::post('notifications', [SettingsController::class, 'updateNotifications'])->name('notifications.update');
     });
 
     // Routes pour le module Utilisateurs & Sécurité (middleware permission temporairement désactivé)
@@ -130,6 +145,170 @@ Route::middleware('auth')->group(function () {
         
         // Rapports
         Route::get('reports', [\App\Http\Controllers\FinanceController::class, 'generateReport'])->name('reports');
+    });
+
+    // Routes pour le module académique (Structure Académique)
+    Route::prefix('academic')->name('academic.')->group(function () {
+        // Gestion des niveaux
+        Route::get('levels', [\App\Http\Controllers\AcademicController::class, 'levels'])->name('levels');
+        Route::get('levels/create', [\App\Http\Controllers\AcademicController::class, 'createLevel'])->name('levels.create');
+        Route::post('levels', [\App\Http\Controllers\AcademicController::class, 'storeLevel'])->name('levels.store');
+        Route::get('levels/{level}', [\App\Http\Controllers\AcademicController::class, 'showLevel'])->name('levels.show');
+        Route::get('levels/{level}/edit', [\App\Http\Controllers\AcademicController::class, 'editLevel'])->name('levels.edit');
+        Route::put('levels/{level}', [\App\Http\Controllers\AcademicController::class, 'updateLevel'])->name('levels.update');
+        Route::delete('levels/{level}', [\App\Http\Controllers\AcademicController::class, 'destroyLevel'])->name('levels.destroy');
+        
+        // Gestion des classes
+        Route::get('classes', [\App\Http\Controllers\AcademicController::class, 'classes'])->name('classes');
+        Route::get('classes/create', [\App\Http\Controllers\AcademicController::class, 'createClass'])->name('classes.create');
+        Route::post('classes', [\App\Http\Controllers\AcademicController::class, 'storeClass'])->name('classes.store');
+        Route::get('classes/{class}', [\App\Http\Controllers\AcademicController::class, 'showClass'])->name('classes.show');
+        Route::get('classes/{class}/edit', [\App\Http\Controllers\AcademicController::class, 'editClass'])->name('classes.edit');
+        Route::put('classes/{class}', [\App\Http\Controllers\AcademicController::class, 'updateClass'])->name('classes.update');
+        Route::delete('classes/{class}', [\App\Http\Controllers\AcademicController::class, 'destroyClass'])->name('classes.destroy');
+        
+        // Gestion des matières
+        Route::get('subjects', [\App\Http\Controllers\AcademicController::class, 'subjects'])->name('subjects');
+        Route::get('subjects/create', [\App\Http\Controllers\AcademicController::class, 'createSubject'])->name('subjects.create');
+        Route::post('subjects', [\App\Http\Controllers\AcademicController::class, 'storeSubject'])->name('subjects.store');
+        Route::get('subjects/{subject}', [\App\Http\Controllers\AcademicController::class, 'showSubject'])->name('subjects.show');
+        Route::get('subjects/{subject}/edit', [\App\Http\Controllers\AcademicController::class, 'editSubject'])->name('subjects.edit');
+        Route::put('subjects/{subject}', [\App\Http\Controllers\AcademicController::class, 'updateSubject'])->name('subjects.update');
+        Route::delete('subjects/{subject}', [\App\Http\Controllers\AcademicController::class, 'destroySubject'])->name('subjects.destroy');
+        
+        // API endpoints pour les filtres dynamiques
+        Route::get('api/cycles/{cycle}/levels', [\App\Http\Controllers\AcademicController::class, 'getLevelsByCycle'])->name('api.cycles.levels');
+        Route::get('api/levels/{level}/classes', [\App\Http\Controllers\AcademicController::class, 'getClassesByLevel'])->name('api.levels.classes');
+        Route::get('api/stats', [\App\Http\Controllers\AcademicController::class, 'getStats'])->name('api.stats');
+    });
+
+    // ==========================================
+    // UNIVERSITÉ - GESTION UNIVERSITAIRE AVANCÉE
+    // ==========================================
+    Route::prefix('university')->name('university.')->group(function () {
+        // Tableau de bord universitaire
+        Route::get('/', [\App\Http\Controllers\UniversityController::class, 'dashboard'])->name('dashboard');
+
+        // Gestion des UFR
+        Route::get('ufrs', [\App\Http\Controllers\UniversityController::class, 'ufrs'])->name('ufrs');
+        Route::get('ufrs/create', [\App\Http\Controllers\UniversityController::class, 'createUFR'])->name('ufrs.create');
+        Route::post('ufrs', [\App\Http\Controllers\UniversityController::class, 'storeUFR'])->name('ufrs.store');
+        Route::get('ufrs/{ufr}', [\App\Http\Controllers\UniversityController::class, 'showUFR'])->name('ufrs.show');
+        Route::get('ufrs/{ufr}/edit', [\App\Http\Controllers\UniversityController::class, 'editUFR'])->name('ufrs.edit');
+        Route::put('ufrs/{ufr}', [\App\Http\Controllers\UniversityController::class, 'updateUFR'])->name('ufrs.update');
+        Route::delete('ufrs/{ufr}', [\App\Http\Controllers\UniversityController::class, 'destroyUFR'])->name('ufrs.destroy');
+
+        // Gestion des Départements
+        Route::get('departments', [\App\Http\Controllers\UniversityController::class, 'departments'])->name('departments');
+        Route::get('departments/create', [\App\Http\Controllers\UniversityController::class, 'createDepartment'])->name('departments.create');
+        Route::post('departments', [\App\Http\Controllers\UniversityController::class, 'storeDepartment'])->name('departments.store');
+        Route::get('departments/{department}', [\App\Http\Controllers\UniversityController::class, 'showDepartment'])->name('departments.show');
+        Route::get('departments/{department}/edit', [\App\Http\Controllers\UniversityController::class, 'editDepartment'])->name('departments.edit');
+        Route::put('departments/{department}', [\App\Http\Controllers\UniversityController::class, 'updateDepartment'])->name('departments.update');
+        Route::delete('departments/{department}', [\App\Http\Controllers\UniversityController::class, 'destroyDepartment'])->name('departments.destroy');
+
+        // Gestion des Programmes
+        Route::get('programs', [\App\Http\Controllers\UniversityController::class, 'programs'])->name('programs');
+        Route::get('programs/create', [\App\Http\Controllers\UniversityController::class, 'createProgram'])->name('programs.create');
+        Route::post('programs', [\App\Http\Controllers\UniversityController::class, 'storeProgram'])->name('programs.store');
+        Route::get('programs/{program}', [\App\Http\Controllers\UniversityController::class, 'showProgram'])->name('programs.show');
+        Route::get('programs/{program}/edit', [\App\Http\Controllers\UniversityController::class, 'editProgram'])->name('programs.edit');
+        Route::put('programs/{program}', [\App\Http\Controllers\UniversityController::class, 'updateProgram'])->name('programs.update');
+        Route::delete('programs/{program}', [\App\Http\Controllers\UniversityController::class, 'destroyProgram'])->name('programs.destroy');
+
+        // Gestion des Semestres
+        Route::get('programs/{program}/semesters', [\App\Http\Controllers\UniversityController::class, 'semesters'])->name('semesters');
+        Route::get('programs/{program}/semesters/create', [\App\Http\Controllers\UniversityController::class, 'createSemester'])->name('semesters.create');
+        Route::post('programs/{program}/semesters', [\App\Http\Controllers\UniversityController::class, 'storeSemester'])->name('semesters.store');
+
+        // Gestion des Unités d'Enseignement
+        Route::get('semesters/{semester}/course-units', [\App\Http\Controllers\UniversityController::class, 'courseUnits'])->name('course-units');
+        Route::get('semesters/{semester}/course-units/create', [\App\Http\Controllers\UniversityController::class, 'createCourseUnit'])->name('course-units.create');
+        Route::post('semesters/{semester}/course-units', [\App\Http\Controllers\UniversityController::class, 'storeCourseUnit'])->name('course-units.store');
+    });
+
+    Route::resource('enrollments', EnrollmentController::class);
+    Route::resource('teacher-assignments', TeacherAssignmentController::class);
+    Route::get('teacher/{teacher}/assignments', [TeacherAssignmentController::class, 'teacherAssignments'])->name('teacher.assignments');
+    Route::get('class/{class}/teachers', [TeacherAssignmentController::class, 'classTeachers'])->name('class.teachers');
+    Route::post('quick-assign-teacher', [TeacherAssignmentController::class, 'quickAssign'])->name('teacher-assignments.quick');
+
+    // ==========================================
+    // MODULE A4 - GESTION DU PERSONNEL & AFFECTATIONS PÉDAGOGIQUES
+    // ==========================================
+    
+    // Routes pour la gestion des enseignants
+    Route::prefix('admin/teachers')->name('admin.teachers.')->group(function () {
+        Route::get('/', [TeacherController::class, 'index'])->name('index');
+        Route::get('create', [TeacherController::class, 'create'])->name('create');
+        Route::post('/', [TeacherController::class, 'store'])->name('store');
+        Route::get('{teacher}', [TeacherController::class, 'show'])->name('show');
+        Route::get('{teacher}/edit', [TeacherController::class, 'edit'])->name('edit');
+        Route::put('{teacher}', [TeacherController::class, 'update'])->name('update');
+        Route::delete('{teacher}', [TeacherController::class, 'destroy'])->name('destroy');
+        Route::post('{teacher}/toggle-status', [TeacherController::class, 'toggleStatus'])->name('toggle-status');
+        Route::get('export', [TeacherController::class, 'export'])->name('export');
+    });
+
+    // Routes pour la gestion des affectations pédagogiques 
+    Route::prefix('admin/assignments')->name('admin.assignments.')->group(function () {
+        Route::get('/', [AdminTeacherAssignmentController::class, 'index'])->name('index');
+        Route::get('create', [AdminTeacherAssignmentController::class, 'create'])->name('create');
+        Route::get('schedule', [AdminTeacherAssignmentController::class, 'schedule'])->name('schedule');
+        Route::post('duplicate', [AdminTeacherAssignmentController::class, 'duplicate'])->name('duplicate');
+        Route::post('/', [AdminTeacherAssignmentController::class, 'store'])->name('store');
+        Route::get('{assignment}', [AdminTeacherAssignmentController::class, 'show'])->name('show');
+        Route::get('{assignment}/edit', [AdminTeacherAssignmentController::class, 'edit'])->name('edit');
+        Route::put('{assignment}', [AdminTeacherAssignmentController::class, 'update'])->name('update');
+        Route::delete('{assignment}', [AdminTeacherAssignmentController::class, 'destroy'])->name('destroy');
+        Route::post('{assignment}/toggle-status', [AdminTeacherAssignmentController::class, 'toggleStatus'])->name('toggle-status');
+    });
+
+    // Routes pour les bulletins scolaires
+    Route::resource('report-cards', \App\Http\Controllers\ReportCardController::class);
+    Route::post('report-cards/{reportCard}/recalculate', [\App\Http\Controllers\ReportCardController::class, 'recalculate'])->name('report-cards.recalculate');
+    Route::post('report-cards/{reportCard}/publish', [\App\Http\Controllers\ReportCardController::class, 'publish'])->name('report-cards.publish');
+    Route::post('report-cards/{reportCard}/finalize', [\App\Http\Controllers\ReportCardController::class, 'finalize'])->name('report-cards.finalize');
+
+    // Routes Admin - MODULE A1 Gouvernance de l'établissement
+    Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin.access'])->group(function () {
+        // MODULE A1 - Écoles
+        Route::resource('schools', \App\Http\Controllers\Admin\SchoolController::class)->except(['show', 'destroy']);
+        Route::get('schools/{school}/settings', [\App\Http\Controllers\Admin\SchoolController::class, 'settings'])->name('schools.settings');
+        Route::put('schools/{school}/settings', [\App\Http\Controllers\Admin\SchoolController::class, 'updateSettings'])->name('schools.settings.update');
+        
+        // MODULE A2 - Années académiques & Périodes
+        Route::resource('academic-years', AcademicYearController::class);
+        Route::patch('academic-years/{academicYear}/toggle-active', [AcademicYearController::class, 'toggleActive'])->name('academic-years.toggle-active');
+        Route::get('academic-years/{academicYear}/periods', [AcademicYearController::class, 'managePeriods'])->name('academic-years.manage-periods');
+        Route::post('academic-years/{academicYear}/generate-periods', [AcademicYearController::class, 'generatePeriods'])->name('academic-years.generate-periods');
+        
+        // Routes pour la gestion des périodes individuelles (si nécessaire)
+        Route::prefix('academic-periods')->name('academic-periods.')->group(function () {
+            Route::post('/', [AcademicYearController::class, 'storePeriod'])->name('store');
+            Route::put('{period}', [AcademicYearController::class, 'updatePeriod'])->name('update');
+            Route::delete('{period}', [AcademicYearController::class, 'destroyPeriod'])->name('destroy');
+            Route::patch('{period}/toggle-active', [AcademicYearController::class, 'togglePeriodActive'])->name('toggle-active');
+        });
+        
+        // MODULE A5 - Paramètres pédagogiques
+        Route::prefix('pedagogy-settings')->name('pedagogy-settings.')->group(function () {
+            Route::get('/', [PedagogicalSettingsController::class, 'index'])->name('index');
+            Route::put('/global', [PedagogicalSettingsController::class, 'updateGlobal'])->name('global.update');
+            Route::put('/level/{level}/threshold', [PedagogicalSettingsController::class, 'updateLevelThreshold'])->name('level.threshold');
+            Route::put('/subject/{subject}/threshold', [PedagogicalSettingsController::class, 'updateSubjectThreshold'])->name('subject.threshold');
+            Route::delete('/level/{level}/threshold', [PedagogicalSettingsController::class, 'resetLevelThreshold'])->name('level.threshold.reset');
+            Route::delete('/subject/{subject}/threshold', [PedagogicalSettingsController::class, 'resetSubjectThreshold'])->name('subject.threshold.reset');
+        });
+
+        // MODULE A6 - Supervision & Audits
+        Route::prefix('supervision')->name('supervision.')->group(function () {
+            Route::get('/', [SupervisionController::class, 'index'])->name('index');
+            Route::get('/teacher-activities', [SupervisionController::class, 'teacherActivities'])->name('teacher-activities');
+            Route::get('/student-activities', [SupervisionController::class, 'studentActivities'])->name('student-activities');
+            Route::get('/user-logs', [SupervisionController::class, 'userLogs'])->name('user-logs');
+            Route::get('/chart-data', [SupervisionController::class, 'getDashboardChartData'])->name('chart-data');
+        });
     });
 });
 

@@ -1,19 +1,26 @@
-<x-app-layout>
-    <x-slot name="header">
-        <div class="flex justify-between items-center">
-            <h2 class="text-2xl font-bold text-gray-900 dark:text-white">
-                Gestion des Rôles & Permissions
-            </h2>
+@extends('layouts.dashboard')
+
+@section('title', 'Gestion des Rôles & Permissions')
+
+@section('content')
+<!-- Page Header -->
+<div class="bg-white dark:bg-gray-800 shadow mb-6">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center py-6">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Gestion des Rôles & Permissions</h1>
+                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Définir et gérer les rôles utilisateurs et leurs permissions</p>
+            </div>
             <div class="flex space-x-3">
-                <a href="{{ route('users.index') }}" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg font-medium transition duration-150">
-                    <svg class="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <a href="{{ route('users.index') }}" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg font-medium transition duration-150 inline-flex items-center">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z"/>
                     </svg>
                     Utilisateurs
                 </a>
                 @can('create_roles')
-                <a href="{{ route('roles.create') }}" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition duration-150">
-                    <svg class="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <a href="{{ route('roles.create') }}" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition duration-150 inline-flex items-center">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
                     </svg>
                     Nouveau Rôle
@@ -21,9 +28,11 @@
                 @endcan
             </div>
         </div>
-    </x-slot>
+    </div>
+</div>
 
-    <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
+<div class="space-y-6">
+    <div class="mx-auto space-y-6">
         <!-- Statistiques -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
@@ -199,7 +208,7 @@
                 <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-6">Permissions Disponibles</h3>
                 
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    @foreach($permissions->groupBy(function($permission) { return explode('_', $permission->name)[1] ?? 'general'; }) as $category => $perms)
+                    @foreach($groupedPermissions as $category => $perms)
                     <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
                         <h4 class="text-sm font-medium text-gray-900 dark:text-white mb-3 capitalize">{{ $category }}</h4>
                         <div class="space-y-1">
@@ -256,4 +265,6 @@
             }
         }
     </script>
-</x-app-layout>
+    </div>
+</div>
+@endsection

@@ -14,11 +14,12 @@ class RoleController extends Controller
     public function index()
     {
         $roles = Role::with('permissions')->get();
-        $permissions = Permission::all()->groupBy(function($permission) {
+        $permissions = Permission::all();
+        $groupedPermissions = $permissions->groupBy(function($permission) {
             return explode('_', $permission->name)[1] ?? 'general';
         });
 
-        return view('roles.index', compact('roles', 'permissions'));
+        return view('roles.index', compact('roles', 'permissions', 'groupedPermissions'));
     }
 
     /**
@@ -26,11 +27,12 @@ class RoleController extends Controller
      */
     public function create()
     {
-        $permissions = Permission::all()->groupBy(function($permission) {
+        $permissions = Permission::all();
+        $groupedPermissions = $permissions->groupBy(function($permission) {
             return explode('_', $permission->name)[1] ?? 'general';
         });
 
-        return view('roles.create', compact('permissions'));
+        return view('roles.create', compact('permissions', 'groupedPermissions'));
     }
 
     /**
@@ -136,40 +138,27 @@ class RoleController extends Controller
     }
 
     /**
-     * Créer une nouvelle permission
+     * Assigner une permission à un rôle
      */
-    public function storePermission(Request $request)
+    public function storePermission(Request $request, Role $role)
     {
         $request->validate([
-            'name' => 'required|string|max:255|unique:permissions',
-            'description' => 'nullable|string|max:500',
+            'permission_id' => 'required|exists:permissions,id',
         ]);
 
-        Permission::create([
-            'name' => $request->name,
-            'guard_name' => 'web',
-        ]);
+        $permission = Permission::find($request->permission_id);
+        $role->givePermissionTo($permission);
 
-        return redirect()->route('roles.index')
-            ->with('success', 'La permission a été créée avec succès.');
+        return response()->json(['success' => true, 'message' => 'Permission ajoutée avec succès.']);
     }
 
     /**
-     * Supprimer une permission
+     * Retirer une permission d'un rôle
      */
-    public function destroyPermission(Permission $permission)
+    public function destroyPermission(Role $role, Permission $permission)
     {
-        // Empêcher la suppression de permissions critiques
-        $criticalPermissions = ['manage_users', 'manage_settings'];
-        
-        if (in_array($permission->name, $criticalPermissions)) {
-            return redirect()->back()
-                ->with('error', 'Cette permission est critique et ne peut pas être supprimée.');
-        }
+        $role->revokePermissionTo($permission);
 
-        $permission->delete();
-
-        return redirect()->route('roles.index')
-            ->with('success', 'La permission a été supprimée avec succès.');
+        return response()->json(['success' => true, 'message' => 'Permission supprimée avec succès.']);
     }
 }

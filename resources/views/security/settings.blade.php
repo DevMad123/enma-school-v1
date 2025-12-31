@@ -1,27 +1,36 @@
-<x-app-layout>
-    <x-slot name="header">
-        <div class="flex justify-between items-center">
-            <h2 class="text-2xl font-bold text-gray-900 dark:text-white">
-                Paramètres de Sécurité
-            </h2>
+@extends('layouts.dashboard')
+
+@section('title', 'Paramètres de Sécurité')
+
+@section('content')
+<!-- Page Header -->
+<div class="bg-white dark:bg-gray-800 shadow mb-6">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center py-6">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Paramètres de Sécurité</h1>
+                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Configuration des politiques de sécurité et d'accès</p>
+            </div>
             <div class="flex space-x-3">
-                <a href="{{ route('security.audit') }}" class="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg font-medium transition duration-150">
-                    <svg class="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <a href="{{ route('security.audit') }}" class="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg font-medium transition duration-150 inline-flex items-center">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                     </svg>
                     Audit de Sécurité
                 </a>
-                <a href="{{ route('security.activity-log') }}" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg font-medium transition duration-150">
-                    <svg class="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <a href="{{ route('security.activity-log') }}" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition duration-150 inline-flex items-center">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 8h6m-6 4h6"/>
                     </svg>
                     Journal d'Activité
                 </a>
             </div>
         </div>
-    </x-slot>
+    </div>
+</div>
 
-    <div class="max-w-4xl mx-auto sm:px-6 lg:px-8 space-y-6">
+<div class="space-y-6">
+    <div class="mx-auto">
         <form method="POST" action="{{ route('security.settings.update') }}" class="space-y-6">
             @csrf
             @method('PUT')
@@ -270,4 +279,5 @@
             </div>
         </form>
     </div>
-</x-app-layout>
+</div>
+@endsection

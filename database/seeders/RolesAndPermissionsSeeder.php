@@ -39,6 +39,13 @@ class RolesAndPermissionsSeeder extends Seeder
             'view_activity_logs',
             'manage_academic_settings',
             
+            // MODULE A1 - Gouvernance de l'établissement
+            'manage_school_governance',
+            'manage_school_info',
+            'manage_school_settings',
+            'upload_school_documents',
+            'configure_academic_system',
+            
             // Gestion des étudiants
             'manage_students', 
             'create_students',
@@ -102,6 +109,7 @@ class RolesAndPermissionsSeeder extends Seeder
         // Création des rôles
         $superAdmin = Role::firstOrCreate(['name' => 'super_admin']);
         $admin = Role::firstOrCreate(['name' => 'admin']);
+        $directeur = Role::firstOrCreate(['name' => 'directeur']);
         $enseignant = Role::firstOrCreate(['name' => 'teacher']);
         $comptable = Role::firstOrCreate(['name' => 'accountant']);
         $surveillant = Role::firstOrCreate(['name' => 'supervisor']);
@@ -119,6 +127,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'manage_users', 'create_users', 'edit_users', 'delete_users', 'view_users',
             'manage_roles', 'create_roles', 'edit_roles', 'view_roles', 'assign_permissions',
             'manage_settings', 'manage_security_settings', 'view_activity_logs', 'manage_academic_settings',
+            'manage_school_governance', 'manage_school_info', 'manage_school_settings', 'upload_school_documents', 'configure_academic_system',
             'manage_students', 'create_students', 'edit_students', 'delete_students', 'view_students',
             'manage_teachers', 'create_teachers', 'edit_teachers', 'delete_teachers', 'view_teachers',
             'manage_classes', 'create_classes', 'edit_classes', 'delete_classes', 'view_classes',
@@ -126,6 +135,21 @@ class RolesAndPermissionsSeeder extends Seeder
             'manage_payments', 'create_payments', 'edit_payments', 'view_payments', 'manage_school_fees',
             'view_reports', 'create_reports', 'export_reports', 'view_dashboard', 'view_analytics',
             'manage_enrollments', 'create_enrollments', 'edit_enrollments', 'delete_enrollments', 'view_enrollments',
+            'view_own_data', 'edit_own_profile',
+        ]);
+
+        // Directeur : permissions similaires à admin mais centrées sur la gouvernance
+        $directeur->syncPermissions([
+            'manage_users', 'view_users', 'edit_users',
+            'manage_settings', 'view_activity_logs', 'manage_academic_settings',
+            'manage_school_governance', 'manage_school_info', 'manage_school_settings', 'upload_school_documents', 'configure_academic_system',
+            'manage_students', 'create_students', 'edit_students', 'view_students',
+            'manage_teachers', 'create_teachers', 'edit_teachers', 'view_teachers',
+            'manage_classes', 'create_classes', 'edit_classes', 'view_classes',
+            'manage_grades', 'view_grades', 'manage_evaluations',
+            'manage_payments', 'view_payments', 'manage_school_fees',
+            'view_reports', 'create_reports', 'export_reports', 'view_dashboard', 'view_analytics',
+            'manage_enrollments', 'create_enrollments', 'edit_enrollments', 'view_enrollments',
             'view_own_data', 'edit_own_profile',
         ]);
 

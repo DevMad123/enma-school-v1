@@ -217,8 +217,7 @@ class Student extends Model
             ->whereHas('academicYear', function ($query) {
                 $query->where('is_active', true);
             })
-            ->where('status', 'active')
-            ->first();
+            ->where('status', 'active');
     }
 
     /**
@@ -226,7 +225,7 @@ class Student extends Model
      */
     public function isEnrolledCurrentYear(): bool
     {
-        return $this->currentEnrollment() !== null;
+        return $this->currentEnrollment()->exists();
     }
 
     /**

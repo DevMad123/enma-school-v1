@@ -17,6 +17,13 @@ return Application::configure(basePath: dirname(__DIR__))
             'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
             'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
             'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
+            'school.exists' => \App\Http\Middleware\EnsureSchoolExists::class,
+            'admin.access' => \App\Http\Middleware\AdminAccess::class,
+        ]);
+        
+        // Appliquer le middleware school.exists à toutes les routes web authentifiées
+        $middleware->web([
+            \App\Http\Middleware\EnsureSchoolExists::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

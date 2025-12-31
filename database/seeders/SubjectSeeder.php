@@ -71,7 +71,7 @@ class SubjectSeeder extends Seeder
         
         foreach ($niveauxPrimaire as $niveau) {
             foreach ($matieresPrimaire as $matiere) {
-                $niveau->subjects()->syncWithoutDetaching([$matiere->id]);
+                $niveau->oldSubjects()->syncWithoutDetaching([$matiere->id]);
                 $this->command->info("  → {$niveau->name} : {$matiere->name}");
             }
         }
@@ -97,7 +97,7 @@ class SubjectSeeder extends Seeder
         // Associer matières au collège
         foreach ($niveauxCollege as $niveau) {
             foreach ($matieresSecondaire as $matiere) {
-                $niveau->subjects()->syncWithoutDetaching([$matiere->id]);
+                $niveau->oldSubjects()->syncWithoutDetaching([$matiere->id]);
                 $this->command->info("  → {$niveau->name} : {$matiere->name}");
             }
         }
@@ -105,7 +105,7 @@ class SubjectSeeder extends Seeder
         // Associer matières au lycée (avec matières spécialisées)
         foreach ($niveauxLycee as $niveau) {
             foreach ($matieresLycee as $matiere) {
-                $niveau->subjects()->syncWithoutDetaching([$matiere->id]);
+                $niveau->oldSubjects()->syncWithoutDetaching([$matiere->id]);
                 $this->command->info("  → {$niveau->name} : {$matiere->name}");
             }
         }
@@ -115,7 +115,7 @@ class SubjectSeeder extends Seeder
         $philosophie = Subject::where('code', 'PHIL')->first();
         
         if ($terminale && $philosophie) {
-            $terminale->subjects()->syncWithoutDetaching([$philosophie->id]);
+            $terminale->oldSubjects()->syncWithoutDetaching([$philosophie->id]);
             $this->command->info("  → Terminale : Philosophie (spéciale)");
         }
     }

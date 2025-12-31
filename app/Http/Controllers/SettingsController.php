@@ -19,90 +19,50 @@ class SettingsController extends Controller
     }
 
     /**
-     * Gestion des informations générales de l'école
+     * Redirection vers la gouvernance de l'établissement (nouveau système)
+     * @deprecated Utiliser Admin\SchoolController à la place
      */
     public function school()
     {
-        $settings = [
-            'school_name' => Setting::get('school_name', 'ENMA School'),
-            'school_address' => Setting::get('school_address', ''),
-            'school_phone' => Setting::get('school_phone', ''),
-            'school_email' => Setting::get('school_email', ''),
-            'school_website' => Setting::get('school_website', ''),
-            'school_logo' => Setting::get('school_logo', ''),
-            'currency' => Setting::get('currency', 'FCFA'),
-            'timezone' => Setting::get('timezone', 'Africa/Abidjan'),
-        ];
-
-        return view('settings.school', compact('settings'));
+        return redirect()->route('admin.schools.index')
+            ->with('info', 'La gestion de l\'établissement a été déplacée vers la section Gouvernance.');
     }
 
     /**
-     * Mise à jour des informations de l'école
+     * Redirection vers la gouvernance de l'établissement (nouveau système)
+     * @deprecated Utiliser Admin\SchoolController à la place
      */
     public function updateSchool(Request $request)
     {
-        $request->validate([
-            'school_name' => 'required|string|max:255',
-            'school_address' => 'nullable|string|max:500',
-            'school_phone' => 'nullable|string|max:20',
-            'school_email' => 'nullable|email|max:255',
-            'school_website' => 'nullable|url|max:255',
-            'currency' => 'required|string|max:10',
-            'timezone' => 'required|string|max:50',
-            'school_logo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-        ]);
-
-        $settings = $request->except(['_token', '_method', 'school_logo']);
-        
-        // Gestion du logo
-        if ($request->hasFile('school_logo')) {
-            $logoPath = $request->file('school_logo')->store('logos', 'public');
-            $settings['school_logo'] = $logoPath;
-        }
-
-        foreach ($settings as $key => $value) {
-            Setting::set($key, $value);
-        }
-
-        return redirect()->route('settings.school')
-            ->with('success', 'Les informations de l\'école ont été mises à jour avec succès.');
+        return redirect()->route('admin.schools.index')
+            ->with('info', 'La gestion de l\'établissement a été déplacée vers la section Gouvernance.');
     }
 
     /**
-     * Gestion des années scolaires
+     * Redirection vers la gouvernance pour la gestion des années scolaires
+     * @deprecated Utiliser Admin\SchoolController à la place
      */
     public function years()
     {
-        $years = AcademicYear::with('gradePeriods')->orderBy('start_date', 'desc')->get();
-        
-        return view('settings.years', compact('years'));
+        return redirect()->route('admin.schools.index')
+            ->with('info', 'La gestion des années scolaires a été déplacée vers la section Gouvernance.');
     }
 
     /**
-     * Créer une nouvelle année scolaire
+     * Redirection vers la gouvernance pour la gestion des années scolaires
+     * @deprecated Utiliser Admin\SchoolController à la place
      */
     public function storeYear(Request $request)
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'start_date' => 'required|date',
-            'end_date' => 'required|date|after:start_date',
-            'is_current' => 'sometimes|boolean',
-        ]);
-
-        // Si cette année est définie comme actuelle, désactiver les autres
-        if ($request->is_current) {
-            AcademicYear::query()->update(['is_current' => false]);
-        }
-
-        $year = AcademicYear::create($request->all());
+        return redirect()->route('admin.schools.index')
+            ->with('info', 'La gestion des années scolaires a été déplacée vers la section Gouvernance.');
+    // }
 
         // Créer les périodes par défaut (3 trimestres)
-        $this->createDefaultPeriods($year);
+        // $this->createDefaultPeriods($year);
 
-        return redirect()->route('settings.years')
-            ->with('success', 'L\'année scolaire a été créée avec succès.');
+        // return redirect()->route('settings.years')
+        //     ->with('success', 'L\'année scolaire a été créée avec succès.');
     }
 
     /**
@@ -119,52 +79,23 @@ class SettingsController extends Controller
     }
 
     /**
-     * Système de notation
+     * Redirection vers la gouvernance pour le système de notation
+     * @deprecated Utiliser Admin\SchoolController à la place
      */
     public function grading()
     {
-        $gradingSettings = [
-            'grading_scale' => Setting::get('grading_scale', '20'), // 20, 100, ou letter
-            'passing_grade' => Setting::get('passing_grade', '10'),
-            'excellence_grade' => Setting::get('excellence_grade', '16'),
-            'grade_precision' => Setting::get('grade_precision', '2'), // nombre de décimales
-            'display_letter_grades' => Setting::get('display_letter_grades', false),
-            'letter_grade_scale' => Setting::get('letter_grade_scale', [
-                'A+' => ['min' => 18, 'max' => 20],
-                'A' => ['min' => 16, 'max' => 17.99],
-                'B+' => ['min' => 14, 'max' => 15.99],
-                'B' => ['min' => 12, 'max' => 13.99],
-                'C' => ['min' => 10, 'max' => 11.99],
-                'D' => ['min' => 8, 'max' => 9.99],
-                'F' => ['min' => 0, 'max' => 7.99],
-            ]),
-        ];
-
-        return view('settings.grading', compact('gradingSettings'));
+        return redirect()->route('admin.schools.index')
+            ->with('info', 'La gestion du système de notation a été déplacée vers la section Gouvernance.');
     }
 
     /**
-     * Mise à jour du système de notation
+     * Redirection vers la gouvernance pour le système de notation
+     * @deprecated Utiliser Admin\SchoolController à la place
      */
     public function updateGrading(Request $request)
     {
-        $request->validate([
-            'grading_scale' => 'required|in:20,100,letter',
-            'passing_grade' => 'required|numeric|min:0',
-            'excellence_grade' => 'required|numeric|min:0',
-            'grade_precision' => 'required|integer|min:0|max:4',
-            'display_letter_grades' => 'sometimes|boolean',
-        ]);
-
-        $settings = $request->except(['_token', '_method']);
-        $settings['display_letter_grades'] = $request->has('display_letter_grades');
-
-        foreach ($settings as $key => $value) {
-            Setting::set($key, $value);
-        }
-
-        return redirect()->route('settings.grading')
-            ->with('success', 'Les paramètres de notation ont été mis à jour avec succès.');
+        return redirect()->route('admin.schools.index')
+            ->with('info', 'La gestion du système de notation a été déplacée vers la section Gouvernance.');
     }
 
     /**
@@ -217,46 +148,91 @@ class SettingsController extends Controller
     }
 
     /**
-     * Créer les périodes par défaut pour une année scolaire
+     * Paramètres système et de sécurité
      */
-    private function createDefaultPeriods(AcademicYear $year)
+    public function system()
     {
-        $startDate = $year->start_date;
-        $endDate = $year->end_date;
-        
-        // Calculer les dates de trimestres
-        $totalDays = $startDate->diffInDays($endDate);
-        $trimesterDays = $totalDays / 3;
-
-        $periods = [
-            [
-                'name' => '1er Trimestre',
-                'start_date' => $startDate,
-                'end_date' => $startDate->copy()->addDays($trimesterDays),
-                'academic_year_id' => $year->id,
-                'type' => 'trimester',
-                'order' => 1,
-            ],
-            [
-                'name' => '2ème Trimestre',
-                'start_date' => $startDate->copy()->addDays($trimesterDays + 1),
-                'end_date' => $startDate->copy()->addDays($trimesterDays * 2),
-                'academic_year_id' => $year->id,
-                'type' => 'trimester',
-                'order' => 2,
-            ],
-            [
-                'name' => '3ème Trimestre',
-                'start_date' => $startDate->copy()->addDays($trimesterDays * 2 + 1),
-                'end_date' => $endDate,
-                'academic_year_id' => $year->id,
-                'type' => 'trimester',
-                'order' => 3,
-            ],
+        $systemSettings = [
+            'app_name' => Setting::get('app_name', 'ENMA School'),
+            'app_version' => Setting::get('app_version', '1.0.0'),
+            'maintenance_mode' => Setting::get('maintenance_mode', false),
+            'debug_mode' => Setting::get('debug_mode', false),
+            'session_timeout' => Setting::get('session_timeout', '120'), // minutes
+            'file_upload_max_size' => Setting::get('file_upload_max_size', '10'), // MB
+            'backup_frequency' => Setting::get('backup_frequency', 'daily'),
+            'enable_audit_logs' => Setting::get('enable_audit_logs', true),
         ];
 
-        foreach ($periods as $period) {
-            GradePeriod::create($period);
+        return view('settings.system', compact('systemSettings'));
+    }
+
+    /**
+     * Mise à jour des paramètres système
+     */
+    public function updateSystem(Request $request)
+    {
+        $request->validate([
+            'app_name' => 'required|string|max:255',
+            'session_timeout' => 'required|integer|min:5|max:1440',
+            'file_upload_max_size' => 'required|integer|min:1|max:100',
+            'backup_frequency' => 'required|in:daily,weekly,monthly',
+        ]);
+
+        $settings = $request->except(['_token', '_method']);
+        $settings['maintenance_mode'] = $request->has('maintenance_mode');
+        $settings['debug_mode'] = $request->has('debug_mode');
+        $settings['enable_audit_logs'] = $request->has('enable_audit_logs');
+
+        foreach ($settings as $key => $value) {
+            Setting::set($key, $value);
         }
+
+        return redirect()->route('settings.system')
+            ->with('success', 'Les paramètres système ont été mis à jour avec succès.');
+    }
+
+    /**
+     * Paramètres d'email et notifications
+     */
+    public function notifications()
+    {
+        $notificationSettings = [
+            'smtp_host' => Setting::get('smtp_host', ''),
+            'smtp_port' => Setting::get('smtp_port', '587'),
+            'smtp_username' => Setting::get('smtp_username', ''),
+            'smtp_encryption' => Setting::get('smtp_encryption', 'tls'),
+            'mail_from_address' => Setting::get('mail_from_address', ''),
+            'mail_from_name' => Setting::get('mail_from_name', ''),
+            'enable_email_notifications' => Setting::get('enable_email_notifications', true),
+            'enable_sms_notifications' => Setting::get('enable_sms_notifications', false),
+        ];
+
+        return view('settings.notifications', compact('notificationSettings'));
+    }
+
+    /**
+     * Mise à jour des paramètres de notifications
+     */
+    public function updateNotifications(Request $request)
+    {
+        $request->validate([
+            'smtp_host' => 'nullable|string|max:255',
+            'smtp_port' => 'nullable|integer|min:1|max:65535',
+            'smtp_username' => 'nullable|email|max:255',
+            'smtp_encryption' => 'nullable|in:tls,ssl',
+            'mail_from_address' => 'nullable|email|max:255',
+            'mail_from_name' => 'nullable|string|max:255',
+        ]);
+
+        $settings = $request->except(['_token', '_method']);
+        $settings['enable_email_notifications'] = $request->has('enable_email_notifications');
+        $settings['enable_sms_notifications'] = $request->has('enable_sms_notifications');
+
+        foreach ($settings as $key => $value) {
+            Setting::set($key, $value);
+        }
+
+        return redirect()->route('settings.notifications')
+            ->with('success', 'Les paramètres de notifications ont été mis à jour avec succès.');
     }
 }

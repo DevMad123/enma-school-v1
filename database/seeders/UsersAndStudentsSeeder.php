@@ -46,7 +46,7 @@ class UsersAndStudentsSeeder extends Seeder
                 'password' => Hash::make('password123'),
             ]);
 
-            $user->assignRole('eleve');
+            $user->assignRole('student');
 
             Student::create([
                 'user_id' => $user->id,
@@ -78,7 +78,7 @@ class UsersAndStudentsSeeder extends Seeder
                 'password' => Hash::make('password123'),
             ]);
 
-            $user->assignRole('enseignant');
+            $user->assignRole('teacher');
 
             Teacher::create([
                 'user_id' => $user->id,
@@ -133,7 +133,7 @@ class UsersAndStudentsSeeder extends Seeder
                 'password' => Hash::make('password123'),
             ]);
 
-            $user->assignRole('surveillant');
+            $user->assignRole('supervisor');
 
             Staff::create([
                 'user_id' => $user->id,

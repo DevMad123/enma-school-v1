@@ -15,6 +15,17 @@ class Teacher extends Model
         'phone',
         'specialization',
         'status',
+        // MODULE A4 - Nouveaux champs
+        'school_id',
+        'employee_id',
+        'hire_date',
+        'qualifications',
+        'teaching_subjects',
+    ];
+
+    protected $casts = [
+        'hire_date' => 'date',
+        'teaching_subjects' => 'array',
     ];
 
     /**
@@ -23,6 +34,14 @@ class Teacher extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * Relation avec l'école (MODULE A4)
+     */
+    public function school(): BelongsTo
+    {
+        return $this->belongsTo(School::class);
     }
 
     /**
@@ -80,5 +99,76 @@ class Teacher extends Model
     public function hasCurrentAssignments(): bool
     {
         return $this->currentAssignments()->exists();
+    }
+
+    /**
+     * Affectations actives (MODULE A4)
+     */
+    public function activeAssignments()
+    {
+        return $this->assignments()->where('is_active', true);
+    }
+
+    /**
+     * Obtenir les matières enseignées par l'enseignant
+     */
+    public function getSubjectsAttribute()
+    {
+        return $this->assignments()
+            ->with('subject')
+            ->get()
+            ->pluck('subject')
+            ->unique('id')
+            ->filter();
+    }
+
+    /**
+     * Obtenir les classes enseignées par l'enseignant
+     */
+    public function getClassesAttribute()
+    {
+        return $this->assignments()
+            ->with('schoolClass')
+            ->get()
+            ->pluck('schoolClass')
+            ->unique('id')
+            ->filter();
+    }
+
+    /**
+     * Calculer la charge horaire totale
+     */
+    public function getTotalWeeklyHours(): int
+    {
+        return $this->activeAssignments()->sum('weekly_hours') ?? 0;
+    }
+
+    /**
+     * Vérifier si l'enseignant peut être assigné à une nouvelle classe
+     */
+    public function canBeAssignedTo($classId, $subjectId, $academicYearId): bool
+    {
+        return !$this->assignments()
+            ->where('class_id', $classId)
+            ->where('subject_id', $subjectId)
+            ->where('academic_year_id', $academicYearId)
+            ->where('is_active', true)
+            ->exists();
+    }
+
+    /**
+     * Scope pour les enseignants d'une école donnée
+     */
+    public function scopeForSchool($query, $schoolId)
+    {
+        return $query->where('school_id', $schoolId);
+    }
+
+    /**
+     * Scope pour les enseignants avec une spécialisation donnée
+     */
+    public function scopeWithSpecialization($query, $specialization)
+    {
+        return $query->where('specialization', $specialization);
     }
 }

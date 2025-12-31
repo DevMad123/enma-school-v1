@@ -15,8 +15,14 @@ class SchoolClass extends Model
         'academic_year_id',
         'cycle_id',
         'level_id',
+        'academic_track_id',
         'name',
         'capacity',
+        'is_active',
+    ];
+
+    protected $casts = [
+        'is_active' => 'boolean',
     ];
 
     /**
@@ -41,6 +47,14 @@ class SchoolClass extends Model
     public function level(): BelongsTo
     {
         return $this->belongsTo(Level::class);
+    }
+
+    /**
+     * Relation avec la filière/parcours académique
+     */
+    public function academicTrack(): BelongsTo
+    {
+        return $this->belongsTo(AcademicTrack::class);
     }
 
     /**
@@ -83,6 +97,22 @@ class SchoolClass extends Model
     public function isFull(): bool
     {
         return $this->students_count >= $this->capacity;
+    }
+
+    /**
+     * Scope pour les classes actives
+     */
+    public function scopeActive($query)
+    {
+        return $query->where('is_active', true);
+    }
+
+    /**
+     * Scope pour les classes d'une filière
+     */
+    public function scopeForTrack($query, $trackId)
+    {
+        return $query->where('academic_track_id', $trackId);
     }
 
     /**

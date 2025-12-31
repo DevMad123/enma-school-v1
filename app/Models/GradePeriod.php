@@ -12,6 +12,8 @@ class GradePeriod extends Model
     protected $fillable = [
         'academic_year_id',
         'name',
+        'type',
+        'order',
         'start_date',
         'end_date',
         'is_active',
@@ -53,6 +55,22 @@ class GradePeriod extends Model
     public function scopeActive($query)
     {
         return $query->where('is_active', true);
+    }
+
+    /**
+     * Scope pour les périodes par type
+     */
+    public function scopeByType($query, $type)
+    {
+        return $query->where('type', $type);
+    }
+
+    /**
+     * Scope pour les périodes par ordre
+     */
+    public function scopeByOrder($query, $order)
+    {
+        return $query->where('order', $order);
     }
 
     /**

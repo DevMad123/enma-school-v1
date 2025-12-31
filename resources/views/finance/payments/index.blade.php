@@ -1,22 +1,36 @@
-@extends('layouts.app')
+@extends('layouts.dashboard')
 
-@section('title', 'Paiements - Enma School')
-
-@section('header')
-    <div class="flex justify-between items-center">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Gestion des Paiements') }}
-        </h2>
-        <a href="{{ route('finance.payments.create') }}" 
-           class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium">
-            + Nouveau Paiement
-        </a>
-    </div>
-@endsection
+@section('title', 'Gestion des Paiements')
 
 @section('content')
-<div class="py-12">
-    <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+<!-- Page Header -->
+<div class="bg-white dark:bg-gray-800 shadow mb-6">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center py-6">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Gestion des Paiements</h1>
+                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Suivi et enregistrement des paiements des étudiants</p>
+            </div>
+            <div class="flex space-x-3">
+                <a href="{{ route('finance.index') }}" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg font-medium transition duration-150 inline-flex items-center">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                    </svg>
+                    Tableau de bord
+                </a>
+                <a href="{{ route('finance.payments.create') }}" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition duration-150 inline-flex items-center">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                    </svg>
+                    Nouveau Paiement
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="space-y-6">
+    <div class="max-w-7xl mx-auto">
         @if (session('success'))
             <div class="mb-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative">
                 {{ session('success') }}
@@ -24,18 +38,10 @@
         @endif
 
         @if (session('error'))
-            <div class="mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative">
+            <div class=\"mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative\">
                 {{ session('error') }}
             </div>
         @endif
-
-        <!-- Navigation de retour -->
-        <div class="mb-6">
-            <a href="{{ route('finance.index') }}" 
-               class="text-blue-600 hover:text-blue-800 text-sm font-medium">
-                ← Retour au tableau de bord financier
-            </a>
-        </div>
 
         <div class="bg-white shadow-sm sm:rounded-lg">
             <div class="p-6">

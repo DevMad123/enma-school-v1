@@ -28,12 +28,12 @@ class AdminUserSeeder extends Seeder
         );
 
         // S'assurer que l'utilisateur a le rôle Administrateur
-        if (!$admin->hasRole('Administrateur')) {
-            $admin->assignRole('Administrateur');
+        if (!$admin->hasRole('admin')) {
+            $admin->assignRole('admin');
         }
 
         // Vérifier que le rôle a toutes les permissions
-        $adminRole = \Spatie\Permission\Models\Role::where('name', 'Administrateur')->first();
+        $adminRole = \Spatie\Permission\Models\Role::where('name', 'admin')->first();
         if ($adminRole) {
             $allPermissions = \Spatie\Permission\Models\Permission::all();
             $adminRole->syncPermissions($allPermissions);

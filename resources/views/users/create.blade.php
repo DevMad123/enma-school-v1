@@ -1,19 +1,30 @@
-<x-app-layout>
-    <x-slot name="header">
-        <div class="flex justify-between items-center">
-            <h2 class="text-2xl font-bold text-gray-900 dark:text-white">
-                Créer un Utilisateur
-            </h2>
-            <a href="{{ route('users.index') }}" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg font-medium transition duration-150">
-                <svg class="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
-                </svg>
-                Retour
-            </a>
-        </div>
-    </x-slot>
+@extends('layouts.dashboard')
 
-    <div class="max-w-3xl mx-auto sm:px-6 lg:px-8">
+@section('title', 'Créer un Utilisateur')
+
+@section('content')
+<!-- Page Header -->
+<div class="bg-white dark:bg-gray-800 shadow mb-6">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center py-6">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Créer un Utilisateur</h1>
+                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Ajouter un nouvel utilisateur au système</p>
+            </div>
+            <div class="flex space-x-3">
+                <a href="{{ route('users.index') }}" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg font-medium transition duration-150 inline-flex items-center">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                    </svg>
+                    Retour à la liste
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="space-y-6">
+    <div class="mx-auto">
         <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
             <div class="p-6">
                 <form method="POST" action="{{ route('users.store') }}" class="space-y-6">
@@ -201,4 +212,5 @@
             </div>
         </div>
     </div>
-</x-app-layout>
+</div>
+@endsection

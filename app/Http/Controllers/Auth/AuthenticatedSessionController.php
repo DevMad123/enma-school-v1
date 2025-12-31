@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
+use App\Models\UserLog;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -28,6 +29,16 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
+        // Mettre à jour les informations de dernière connexion
+        $user = Auth::user();
+        $user->update([
+            'last_login_at' => now(),
+            'last_login_ip' => $request->ip()
+        ]);
+
+        // Enregistrer le log de connexion
+        UserLog::logLogin($user, $request->ip(), $request->userAgent());
+
         return redirect()->intended(route('dashboard', absolute: false));
     }
 
@@ -36,6 +47,11 @@ class AuthenticatedSessionController extends Controller
      */
     public function destroy(Request $request): RedirectResponse
     {
+        // Enregistrer le log de déconnexion avant la déconnexion
+        if (Auth::check()) {
+            UserLog::logLogout(Auth::user(), $request->ip(), $request->userAgent());
+        }
+
         Auth::guard('web')->logout();
 
         $request->session()->invalidate();

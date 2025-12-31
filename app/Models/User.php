@@ -26,6 +26,8 @@ class User extends Authenticatable
         'address',
         'date_of_birth',
         'is_active',
+        'last_login_at',
+        'last_login_ip',
     ];
 
     /**
@@ -110,5 +112,31 @@ class User extends Authenticatable
         if ($this->isParent()) return $this->parentProfile;
         if ($this->isStaff()) return $this->staff;
         return null;
+    }
+
+    /**
+     * Relations pour les logs
+     */
+    public function userLogs()
+    {
+        return $this->hasMany(UserLog::class);
+    }
+
+    public function activityLogs()
+    {
+        return $this->hasMany(ActivityLog::class);
+    }
+
+    /**
+     * Méthodes utilitaires pour les logs
+     */
+    public function logActivity(string $entity, $entityId, string $action, array $properties = [])
+    {
+        return ActivityLog::logActivity($this, $entity, $entityId, $action, $properties);
+    }
+
+    public function logAction(string $action, string $description = null, array $metadata = [])
+    {
+        return UserLog::logAction($this, $action, $description, $metadata);
     }
 }

@@ -10,6 +10,11 @@ use App\Models\Payment;
 use App\Models\SchoolFee;
 use App\Models\AcademicYear;
 use App\Models\TeacherAssignment;
+use App\Models\UserLog;
+use App\Models\ActivityLog;
+use App\Models\Grade;
+use App\Models\Evaluation;
+use App\Traits\HasSchoolContext;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
@@ -19,6 +24,9 @@ class DashboardController extends Controller
     /**
      * Dashboard principal avec redirection selon le rôle
      */
+    
+    use HasSchoolContext;
+    
     public function index()
     {
         $user = Auth::user();
@@ -86,10 +94,38 @@ class DashboardController extends Controller
             'total_assignments' => TeacherAssignment::count(), // Total des affectations au lieu de pending
         ];
 
+        // Statistiques de supervision pour le Module A6
+        $supervisionStats = [
+            'today_logins' => UserLog::byAction('logged_in')->today()->count(),
+            'week_unique_users' => UserLog::byAction('logged_in')->thisWeek()->distinct('user_id')->count(),
+            'monthly_activities' => ActivityLog::thisMonth()->count(),
+            'active_teachers' => UserLog::byAction('logged_in')
+                ->thisWeek()
+                ->whereHas('user', function($q) {
+                    $q->whereHas('teacher');
+                })
+                ->distinct('user_id')
+                ->count(),
+            'active_students' => UserLog::byAction('logged_in')
+                ->thisWeek()
+                ->whereHas('user', function($q) {
+                    $q->whereHas('student');
+                })
+                ->distinct('user_id')
+                ->count(),
+        ];
+
+        // Activités récentes pour le Module A6
+        $recentSystemActivities = ActivityLog::with('user')
+            ->latest()
+            ->limit(5)
+            ->get();
+
         return view('dashboards.admin', compact(
             'totalStudents', 'totalTeachers', 'totalClasses', 'totalUsers',
             'totalRevenue', 'monthlyRevenue', 'pendingPayments', 'overduePayments',
-            'recentPayments', 'enrollmentTrend', 'recentActivities'
+            'recentPayments', 'enrollmentTrend', 'recentActivities',
+            'supervisionStats', 'recentSystemActivities'
         ));
     }
 

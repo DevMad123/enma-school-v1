@@ -311,5 +311,100 @@
                 </div>
             </x-dashboard.card>
         </div>
+
+        <!-- MODULE A6 - Supervision & Audits -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="lg:col-span-2">
+                <x-dashboard.card 
+                    title="📊 Module A6 — Supervision & Audits"
+                    subtitle="Monitoring et activités système"
+                >
+                    <x-slot name="actions">
+                        <a href="{{ route('admin.supervision.index') }}" 
+                           class="inline-flex items-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg transition-colors duration-200">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                            </svg>
+                            Voir Détails
+                        </a>
+                    </x-slot>
+
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div class="text-center p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                            <p class="text-2xl font-bold text-blue-600 dark:text-blue-400">{{ $supervisionStats['today_logins'] }}</p>
+                            <p class="text-xs text-blue-600 dark:text-blue-400">Connexions aujourd'hui</p>
+                        </div>
+                        <div class="text-center p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                            <p class="text-2xl font-bold text-green-600 dark:text-green-400">{{ $supervisionStats['week_unique_users'] }}</p>
+                            <p class="text-xs text-green-600 dark:text-green-400">Utilisateurs actifs (7j)</p>
+                        </div>
+                        <div class="text-center p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
+                            <p class="text-2xl font-bold text-purple-600 dark:text-purple-400">{{ $supervisionStats['active_teachers'] }}</p>
+                            <p class="text-xs text-purple-600 dark:text-purple-400">Enseignants actifs</p>
+                        </div>
+                        <div class="text-center p-3 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
+                            <p class="text-2xl font-bold text-orange-600 dark:text-orange-400">{{ $supervisionStats['active_students'] }}</p>
+                            <p class="text-xs text-orange-600 dark:text-orange-400">Étudiants actifs</p>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <a href="{{ route('admin.supervision.teacher-activities') }}" 
+                           class="block p-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-colors duration-200">
+                            <h4 class="font-semibold">🧑‍🏫 Enseignants</h4>
+                            <p class="text-sm opacity-90">Activités pédagogiques</p>
+                        </a>
+                        <a href="{{ route('admin.supervision.student-activities') }}" 
+                           class="block p-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg hover:from-green-600 hover:to-green-700 transition-colors duration-200">
+                            <h4 class="font-semibold">🎓 Étudiants</h4>
+                            <p class="text-sm opacity-90">Engagement académique</p>
+                        </a>
+                        <a href="{{ route('admin.supervision.user-logs') }}" 
+                           class="block p-3 bg-gradient-to-r from-indigo-500 to-indigo-600 text-white rounded-lg hover:from-indigo-600 hover:to-indigo-700 transition-colors duration-200">
+                            <h4 class="font-semibold">🔒 Logs</h4>
+                            <p class="text-sm opacity-90">Connexions & Audits</p>
+                        </a>
+                    </div>
+                </x-dashboard.card>
+            </div>
+
+            <x-dashboard.card 
+                title="🔄 Activités Récentes"
+                subtitle="Actions système en temps réel"
+            >
+                <div class="space-y-3 max-h-64 overflow-y-auto">
+                    @forelse($recentSystemActivities as $activity)
+                    <div class="flex items-start space-x-3">
+                        <div class="w-2 h-2 bg-indigo-500 rounded-full mt-2 flex-shrink-0"></div>
+                        <div class="min-w-0 flex-1">
+                            <p class="text-sm text-gray-900 dark:text-white">
+                                <span class="font-medium">{{ $activity->user->name }}</span>
+                                <span class="text-gray-600 dark:text-gray-400">
+                                    a {{ $activity->action }} {{ $activity->entity }}
+                                    @if($activity->entity_id) #{{ $activity->entity_id }} @endif
+                                </span>
+                            </p>
+                            <p class="text-xs text-gray-500 dark:text-gray-400">
+                                {{ $activity->created_at->diffForHumans() }}
+                            </p>
+                        </div>
+                    </div>
+                    @empty
+                    <div class="text-center py-4">
+                        <p class="text-gray-500 dark:text-gray-400 text-sm">Aucune activité récente</p>
+                    </div>
+                    @endforelse
+                </div>
+                
+                @if($recentSystemActivities->count() > 0)
+                <div class="mt-4 pt-3 border-t border-gray-200 dark:border-gray-700">
+                    <a href="{{ route('admin.supervision.index') }}" 
+                       class="text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300">
+                        Voir toutes les activités →
+                    </a>
+                </div>
+                @endif
+            </x-dashboard.card>
+        </div>
     </div>
 @endsection
