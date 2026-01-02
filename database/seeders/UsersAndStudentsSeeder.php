@@ -6,9 +6,7 @@ use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use App\Models\User;
 use App\Models\Student;
-use App\Models\Teacher;
 use App\Models\ParentProfile;
-use App\Models\Staff;
 use Illuminate\Support\Facades\Hash;
 
 class UsersAndStudentsSeeder extends Seeder
@@ -62,41 +60,16 @@ class UsersAndStudentsSeeder extends Seeder
             $this->command->info("Étudiant créé : {$studentData[0]} {$studentData[1]}");
         }
 
-        // Créer des enseignants
-        $teacherNames = [
-            ['Paul', 'Durand', 'Mathématiques'],
-            ['Claire', 'Bernard', 'Français'],
-            ['Michel', 'Petit', 'Histoire-Géographie'],
-            ['Anne', 'Robert', 'Sciences'],
-            ['David', 'Richard', 'Anglais'],
-        ];
-
-        foreach ($teacherNames as $teacherData) {
-            $user = User::create([
-                'name' => $teacherData[0] . ' ' . $teacherData[1],
-                'email' => strtolower($teacherData[0]) . '.' . strtolower($teacherData[1]) . '.prof@enmaschool.com',
-                'password' => Hash::make('password123'),
-            ]);
-
-            $user->assignRole('teacher');
-
-            Teacher::create([
-                'user_id' => $user->id,
-                'first_name' => $teacherData[0],
-                'last_name' => $teacherData[1],
-                'specialization' => $teacherData[2],
-                'phone' => '06' . rand(10000000, 99999999),
-                'status' => 'active',
-            ]);
-
-            $this->command->info("Enseignant créé : {$teacherData[0]} {$teacherData[1]} ({$teacherData[2]})");
-        }
-
         // Créer des parents
         $parentNames = [
             ['Robert', 'Dupont'],
             ['Sylvie', 'Martin'],
             ['François', 'Durand'],
+            ['Catherine', 'Lefebvre'],
+            ['Patrick', 'Moreau'],
+            ['Nicole', 'Laurent'],
+            ['Bernard', 'Simon'],
+            ['Monique', 'Michel'],
         ];
 
         foreach ($parentNames as $parentData) {
@@ -119,39 +92,9 @@ class UsersAndStudentsSeeder extends Seeder
             $this->command->info("Parent créé : {$parentData[0]} {$parentData[1]}");
         }
 
-        // Créer du personnel administratif
-        $staffNames = [
-            ['Christine', 'Directeur', 'Directrice'],
-            ['Marc', 'Secretaire', 'Secrétaire'],
-            ['Julie', 'Comptable', 'Comptable'],
-        ];
-
-        foreach ($staffNames as $staffData) {
-            $user = User::create([
-                'name' => $staffData[0] . ' ' . $staffData[1],
-                'email' => strtolower($staffData[0]) . '.' . strtolower($staffData[1]) . '@enmaschool.com',
-                'password' => Hash::make('password123'),
-            ]);
-
-            $user->assignRole('supervisor');
-
-            Staff::create([
-                'user_id' => $user->id,
-                'first_name' => $staffData[0],
-                'last_name' => $staffData[1],
-                'position' => $staffData[2],
-                'phone' => '06' . rand(10000000, 99999999),
-                'status' => 'active',
-            ]);
-
-            $this->command->info("Personnel créé : {$staffData[0]} {$staffData[1]} ({$staffData[2]})");
-        }
-
         $this->command->info('Utilisateurs et profils créés avec succès !');
         $this->command->info('- ' . User::count() . ' utilisateurs au total');
         $this->command->info('- ' . Student::count() . ' étudiants');
-        $this->command->info('- ' . Teacher::count() . ' enseignants');
         $this->command->info('- ' . ParentProfile::count() . ' parents');
-        $this->command->info('- ' . Staff::count() . ' personnels');
     }
 }

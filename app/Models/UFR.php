@@ -21,6 +21,7 @@ class UFR extends Model
         'contact_email',
         'contact_phone',
         'building',
+        'address',
         'is_active',
     ];
 
@@ -37,11 +38,36 @@ class UFR extends Model
     }
 
     /**
-     * Relation avec les départements
+     * Relation avec les départements avec eager loading optimisé
      */
     public function departments(): HasMany
     {
-        return $this->hasMany(Department::class);
+        return $this->hasMany(Department::class, 'ufr_id')
+                    ->with(['programs:id,department_id,name,is_active'])
+                    ->withCount(['programs', 'activePrograms']);
+    }
+
+    /**
+     * Programmes via les départements (optimisé)
+     */
+    public function programs()
+    {
+        return $this->hasManyThrough(
+            Program::class,
+            Department::class,
+            'ufr_id',      // Foreign key sur departments table
+            'department_id', // Foreign key sur programs table
+            'id',           // Local key sur ufrs table
+            'id'            // Local key sur departments table
+        );
+    }
+
+    /**
+     * Programmes actifs uniquement
+     */
+    public function activePrograms()
+    {
+        return $this->programs()->active();
     }
 
     /**

@@ -12,6 +12,7 @@ class SchoolClass extends Model
     protected $table = 'classes';
     
     protected $fillable = [
+        'school_id', // Lien direct avec l'école
         'academic_year_id',
         'cycle_id',
         'level_id',
@@ -31,6 +32,14 @@ class SchoolClass extends Model
     public function academicYear(): BelongsTo
     {
         return $this->belongsTo(AcademicYear::class);
+    }
+
+    /**
+     * Relation avec l'école
+     */
+    public function school(): BelongsTo
+    {
+        return $this->belongsTo(School::class);
     }
 
     /**

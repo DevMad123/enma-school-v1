@@ -3,11 +3,15 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Http\Requests\StoreUserRequest;
+use App\Http\Requests\UpdateUserRequest;
 use Illuminate\Http\Request;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
+use Carbon\Carbon;
 
 class UserController extends Controller
 {
@@ -64,34 +68,118 @@ class UserController extends Controller
     }
 
     /**
-     * Enregistrer un nouvel utilisateur
+     * Enregistrer un nouvel utilisateur avec validation robuste
      */
-    public function store(Request $request)
+    public function store(StoreUserRequest $request)
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:8|confirmed',
-            'role' => 'required|exists:roles,name',
-            'is_active' => 'sometimes|boolean',
-        ]);
+        try {
+            DB::beginTransaction();
+            
+            $validatedData = $request->validated();
+            
+            // Création de l'utilisateur avec données validées
+            $user = User::create([
+                'name' => $validatedData['name'],
+                'email' => $validatedData['email'],
+                'phone' => $validatedData['phone'] ?? null,
+                'password' => Hash::make($validatedData['password']),
+                'date_of_birth' => $validatedData['date_of_birth'] ?? null,
+                'address' => $validatedData['address'] ?? null,
+                'email_verified_at' => $request->has('email_verified') ? now() : null,
+                'is_active' => $validatedData['is_active'] ?? true,
+                'created_by' => auth()->id(),
+                'last_login_at' => null,
+                'login_count' => 0
+            ]);
 
-        $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-            'email_verified_at' => $request->has('email_verified') ? now() : null,
-        ]);
+            // Attribution du rôle avec vérification
+            $role = Role::where('name', $validatedData['role'])->first();
+            if (!$role) {
+                throw ValidationException::withMessages([
+                    'role' => 'Le rôle spécifié n\'existe pas.'
+                ]);
+            }
+            
+            $user->assignRole($role);
 
-        $user->assignRole($request->role);
+            // Gestion du statut actif/inactif avec audit
+            if (!($validatedData['is_active'] ?? true)) {
+                $user->update([
+                    'banned_at' => now(),
+                    'banned_by' => auth()->id(),
+                    'ban_reason' => 'Compte désactivé à la création'
+                ]);
+            }
 
-        // Si l'utilisateur n'est pas actif, le bannir
-        if (!$request->has('is_active')) {
-            $user->update(['banned_at' => now()]);
+            // Log de sécurité pour audit
+            try {
+                if (class_exists(\Spatie\Activitylog\Models\Activity::class)) {
+                    \Spatie\Activitylog\Models\Activity::create([
+                        'log_name' => 'user_management',
+                        'description' => 'Utilisateur créé',
+                        'subject_type' => get_class($user),
+                        'subject_id' => $user->id,
+                        'causer_type' => auth()->check() ? get_class(auth()->user()) : null,
+                        'causer_id' => auth()->id(),
+                        'properties' => [
+                            'email' => $user->email,
+                            'role' => $validatedData['role'],
+                            'is_active' => $validatedData['is_active'] ?? true,
+                            'ip_address' => $request->ip(),
+                            'user_agent' => $request->userAgent()
+                        ]
+                    ]);
+                } else {
+                    \Log::info('Utilisateur créé', [
+                        'user_id' => $user->id,
+                        'email' => $user->email,
+                        'role' => $validatedData['role'],
+                        'creator_id' => auth()->id()
+                    ]);
+                }
+            } catch (\Exception $e) {
+                \Log::warning('Erreur lors du logging de création utilisateur', [
+                    'error' => $e->getMessage(),
+                    'user_id' => $user->id
+                ]);
+            }
+            
+            DB::commit();
+            
+            // Réponse adaptée selon le type de requête
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'L\'utilisateur a été créé avec succès.',
+                    'user' => $user->load('roles')
+                ], 201);
+            }
+
+            return redirect()->route('users.index')
+                ->with('success', 'L\'utilisateur a été créé avec succès.');
+                
+        } catch (\Exception $e) {
+            DB::rollback();
+            
+            // Log de l'erreur pour débogage
+            \Log::error('Erreur lors de la création d\'utilisateur', [
+                'error' => $e->getMessage(),
+                'user_id' => auth()->id(),
+                'data' => $request->except('password')
+            ]);
+            
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Une erreur est survenue lors de la création de l\'utilisateur.',
+                    'error' => config('app.debug') ? $e->getMessage() : null
+                ], 500);
+            }
+            
+            return redirect()->back()
+                ->withInput($request->except('password'))
+                ->with('error', 'Une erreur est survenue lors de la création de l\'utilisateur.');
         }
-
-        return redirect()->route('users.index')
-            ->with('success', 'L\'utilisateur a été créé avec succès.');
     }
 
     /**
@@ -113,41 +201,186 @@ class UserController extends Controller
     }
 
     /**
-     * Mettre à jour un utilisateur
+     * Mettre à jour un utilisateur avec validation robuste
      */
-    public function update(Request $request, User $user)
+    public function update(UpdateUserRequest $request, User $user)
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
-            'password' => 'nullable|string|min:8|confirmed',
-            'role' => 'required|exists:roles,name',
-            'is_active' => 'sometimes|boolean',
-        ]);
+        try {
+            DB::beginTransaction();
+            
+            $validatedData = $request->validated();
+            $originalData = $user->toArray();
+            
+            // Préparation des données de mise à jour
+            $updateData = [
+                'name' => $validatedData['name'],
+                'email' => $validatedData['email'],
+                'phone' => $validatedData['phone'] ?? null,
+                'date_of_birth' => $validatedData['date_of_birth'] ?? null,
+                'address' => $validatedData['address'] ?? null,
+                'updated_by' => auth()->id()
+            ];
 
-        $updateData = [
-            'name' => $request->name,
-            'email' => $request->email,
-        ];
+            // Gestion du mot de passe avec sécurité
+            if (!empty($validatedData['password'])) {
+                $updateData['password'] = Hash::make($validatedData['password']);
+                $updateData['password_changed_at'] = now();
+                
+                // Log changement de mot de passe
+                try {
+                    if (class_exists(\Spatie\Activitylog\Models\Activity::class)) {
+                        \Spatie\Activitylog\Models\Activity::create([
+                            'log_name' => 'security',
+                            'description' => 'Mot de passe modifié',
+                            'subject_type' => get_class($user),
+                            'subject_id' => $user->id,
+                            'causer_type' => auth()->check() ? get_class(auth()->user()) : null,
+                            'causer_id' => auth()->id()
+                        ]);
+                    } else {
+                        \Log::warning('Mot de passe modifié', [
+                            'user_id' => $user->id,
+                            'modified_by' => auth()->id()
+                        ]);
+                    }
+                } catch (\Exception $e) {
+                    \Log::error('Erreur logging modification mot de passe', [
+                        'error' => $e->getMessage(),
+                        'user_id' => $user->id
+                    ]);
+                }
+            }
 
-        if ($request->filled('password')) {
-            $updateData['password'] = Hash::make($request->password);
+            // Gestion du statut actif/inactif avec historique
+            if (array_key_exists('is_active', $validatedData)) {
+                if ($validatedData['is_active']) {
+                    $updateData['banned_at'] = null;
+                    $updateData['banned_by'] = null;
+                    $updateData['ban_reason'] = null;
+                } else {
+                    $updateData['banned_at'] = now();
+                    $updateData['banned_by'] = auth()->id();
+                    $updateData['ban_reason'] = 'Compte désactivé par l\'administration';
+                }
+            }
+
+            $user->update($updateData);
+
+            // Mise à jour du rôle avec vérifications de sécurité
+            if (isset($validatedData['role'])) {
+                $newRole = Role::where('name', $validatedData['role'])->first();
+                if (!$newRole) {
+                    throw ValidationException::withMessages([
+                        'role' => 'Le rôle spécifié n\'existe pas.'
+                    ]);
+                }
+                
+                $oldRoles = $user->roles->pluck('name')->toArray();
+                $user->syncRoles([$validatedData['role']]);
+                
+                // Log changement de rôle
+                if ($oldRoles !== [$validatedData['role']]) {
+                    try {
+                        if (class_exists(\Spatie\Activitylog\Models\Activity::class)) {
+                            \Spatie\Activitylog\Models\Activity::create([
+                                'log_name' => 'user_management',
+                                'description' => 'Rôle modifié',
+                                'subject_type' => get_class($user),
+                                'subject_id' => $user->id,
+                                'causer_type' => auth()->check() ? get_class(auth()->user()) : null,
+                                'causer_id' => auth()->id(),
+                                'properties' => [
+                                    'old_roles' => $oldRoles,
+                                    'new_role' => $validatedData['role']
+                                ]
+                            ]);
+                        } else {
+                            \Log::info('Rôle modifié', [
+                                'user_id' => $user->id,
+                                'old_roles' => $oldRoles,
+                                'new_role' => $validatedData['role'],
+                                'modified_by' => auth()->id()
+                            ]);
+                        }
+                    } catch (\Exception $e) {
+                        \Log::error('Erreur logging changement rôle', [
+                            'error' => $e->getMessage(),
+                            'user_id' => $user->id
+                        ]);
+                    }
+                }
+            }
+            
+            // Log complet de modification avec diff
+            $changes = array_diff_assoc($user->fresh()->toArray(), $originalData);
+            if (!empty($changes)) {
+                try {
+                    if (class_exists(\Spatie\Activitylog\Models\Activity::class)) {
+                        \Spatie\Activitylog\Models\Activity::create([
+                            'log_name' => 'user_management',
+                            'description' => 'Utilisateur modifié',
+                            'subject_type' => get_class($user),
+                            'subject_id' => $user->id,
+                            'causer_type' => auth()->check() ? get_class(auth()->user()) : null,
+                            'causer_id' => auth()->id(),
+                            'properties' => [
+                                'changes' => $changes,
+                                'ip_address' => $request->ip(),
+                                'user_agent' => $request->userAgent()
+                            ]
+                        ]);
+                    } else {
+                        \Log::info('Utilisateur modifié', [
+                            'user_id' => $user->id,
+                            'changes' => $changes,
+                            'modified_by' => auth()->id()
+                        ]);
+                    }
+                } catch (\Exception $e) {
+                    \Log::error('Erreur logging modification utilisateur', [
+                        'error' => $e->getMessage(),
+                        'user_id' => $user->id
+                    ]);
+                }
+            }
+
+            DB::commit();
+            
+            // Réponse adaptée selon le type de requête
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'L\'utilisateur a été mis à jour avec succès.',
+                    'user' => $user->fresh()->load('roles')
+                ]);
+            }
+
+            return redirect()->route('users.index')
+                ->with('success', 'L\'utilisateur a été mis à jour avec succès.');
+                
+        } catch (\Exception $e) {
+            DB::rollback();
+            
+            // Log de l'erreur
+            \Log::error('Erreur lors de la mise à jour d\'utilisateur', [
+                'error' => $e->getMessage(),
+                'user_id' => auth()->id(),
+                'target_user_id' => $user->id,
+                'data' => $request->except('password')
+            ]);
+            
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Une erreur est survenue lors de la mise à jour.',
+                    'error' => config('app.debug') ? $e->getMessage() : null
+                ], 500);
+            }
+            
+            return redirect()->back()
+                ->withInput($request->except('password'))
+                ->with('error', 'Une erreur est survenue lors de la mise à jour.');
         }
-
-        // Gestion du statut actif/inactif
-        if ($request->has('is_active')) {
-            $updateData['banned_at'] = null;
-        } else {
-            $updateData['banned_at'] = now();
-        }
-
-        $user->update($updateData);
-
-        // Mettre à jour le rôle
-        $user->syncRoles([$request->role]);
-
-        return redirect()->route('users.index')
-            ->with('success', 'L\'utilisateur a été mis à jour avec succès.');
     }
 
     /**

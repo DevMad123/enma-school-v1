@@ -12,18 +12,34 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        // Enregistrer les middlewares Spatie Permission
+        // Enregistrer les middlewares Spatie Permission et de sécurité
         $middleware->alias([
             'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
             'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
             'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
             'school.exists' => \App\Http\Middleware\EnsureSchoolExists::class,
             'admin.access' => \App\Http\Middleware\AdminAccess::class,
+            'university' => \App\Http\Middleware\UniversityMiddleware::class,
+            'rate.limit.custom' => \App\Http\Middleware\CustomRateLimit::class,
         ]);
         
         // Appliquer le middleware school.exists à toutes les routes web authentifiées
         $middleware->web([
             \App\Http\Middleware\EnsureSchoolExists::class,
+        ]);
+        
+        // Groupes de middleware pour la sécurité
+        $middleware->group('secure', [
+            'auth',
+            'verified',
+            'rate.limit.custom:default'
+        ]);
+        
+        $middleware->group('financial', [
+            'auth',
+            'verified',
+            'permission:manage_finances',
+            'rate.limit.custom:financial'
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

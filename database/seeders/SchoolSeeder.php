@@ -28,7 +28,8 @@ class SchoolSeeder extends Seeder
         $school1 = School::create([
             'name' => 'École Enma School',
             'short_name' => 'EES',
-            'type' => 'secondary',
+            'type' => 'pre_university',
+            'educational_levels' => ['primary', 'secondary'],
             'email' => 'contact@enmaschool.edu.ci',
             'phone' => '+225 01 02 03 04 05',
             'address' => '123 Rue de l\'Éducation, Cocody',
@@ -43,7 +44,8 @@ class SchoolSeeder extends Seeder
         $school2 = School::create([
             'name' => 'Collège Moderne d\'Abidjan',
             'short_name' => 'CMA',
-            'type' => 'secondary',
+            'type' => 'pre_university',
+            'educational_levels' => ['secondary'],
             'email' => 'info@collegemoderne.edu.ci',
             'phone' => '+225 01 02 03 04 06',
             'address' => '456 Boulevard de la Paix, Plateau',
@@ -54,11 +56,12 @@ class SchoolSeeder extends Seeder
             'is_active' => true,
         ]);
         
-        // École primaire - Système trimestre (utiliser 'secondary' car 'primary' n'est pas dans l'enum)
+        // École primaire - Système trimestre
         $school3 = School::create([
             'name' => 'Groupe Scolaire Les Palmiers',
             'short_name' => 'GSP',
-            'type' => 'secondary', // Changé de 'primary' à 'secondary'
+            'type' => 'pre_university',
+            'educational_levels' => ['primary', 'secondary'],
             'email' => 'direction@lespalmiers.edu.ci',
             'phone' => '+225 01 02 03 04 07',
             'address' => '789 Rue des Palmiers, Marcory',

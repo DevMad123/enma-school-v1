@@ -156,7 +156,7 @@ class AcademicYear extends Model
 
             $this->academicPeriods()->create([
                 'name' => $period['name'],
-                'type' => $academicSystem,
+                'short_name' => $academicSystem === 'trimestre' ? 'T' . $period['order'] : 'S' . $period['order'],
                 'order' => $period['order'],
                 'start_date' => $periodStartDate,
                 'end_date' => $periodEndDate,

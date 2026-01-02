@@ -4,7 +4,7 @@
 
 @section('content')
 <div class="py-6">
-    <div class="max-w-4xl mx-auto space-y-6">
+    <div class="mx-auto space-y-6">
         <!-- En-tête -->
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
             <div class="flex justify-between items-center">
@@ -108,41 +108,28 @@
                                 @enderror
                             </div>
 
-                            <!-- Email du Doyen -->
+                            <!-- Email de contact -->
                             <div>
-                                <label for="dean_email" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                                    Email du Doyen
+                                <label for="contact_email" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                    Email de contact
                                 </label>
-                                <input type="email" id="dean_email" name="dean_email" value="{{ old('dean_email') }}" 
+                                <input type="email" id="contact_email" name="contact_email" value="{{ old('contact_email') }}" 
                                        class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-purple-500 focus:ring-purple-500 dark:bg-gray-700 dark:text-white" 
-                                       placeholder="doyen@ufr.universite.edu">
-                                @error('dean_email')
+                                       placeholder="contact@ufr.universite.edu">
+                                @error('contact_email')
                                     <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
                                 @enderror
                             </div>
 
                             <!-- Téléphone -->
                             <div>
-                                <label for="phone" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                <label for="contact_phone" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
                                     Téléphone
                                 </label>
-                                <input type="text" id="phone" name="phone" value="{{ old('phone') }}" 
+                                <input type="text" id="contact_phone" name="contact_phone" value="{{ old('contact_phone') }}" 
                                        class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-purple-500 focus:ring-purple-500 dark:bg-gray-700 dark:text-white" 
                                        placeholder="+33 1 23 45 67 89">
-                                @error('phone')
-                                    <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
-                                @enderror
-                            </div>
-
-                            <!-- Email UFR -->
-                            <div>
-                                <label for="email" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                                    Email de l'UFR
-                                </label>
-                                <input type="email" id="email" name="email" value="{{ old('email') }}" 
-                                       class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-purple-500 focus:ring-purple-500 dark:bg-gray-700 dark:text-white" 
-                                       placeholder="contact@ufr.universite.edu">
-                                @error('email')
+                                @error('contact_phone')
                                     <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
                                 @enderror
                             </div>

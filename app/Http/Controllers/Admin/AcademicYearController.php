@@ -22,19 +22,40 @@ class AcademicYearController extends Controller
      */
     public function index(Request $request)
     {
-        $schoolId = $request->get('school_id');
+        // Pour la V1, se limiter à l'école ID 1
+        $mainSchool = School::find(1);
         
-        $query = AcademicYear::with(['school', 'academicPeriods'])
-            ->orderBy('created_at', 'desc');
-            
-        if ($schoolId) {
-            $query->where('school_id', $schoolId);
+        if (!$mainSchool) {
+            abort(404, 'École principale non trouvée');
         }
         
-        $academicYears = $query->paginate(10);
-        $schools = School::active()->get();
+        $query = AcademicYear::with(['school', 'academicPeriods'])
+            ->where('school_id', 1) // Fixer à l'école ID 1
+            ->orderBy('created_at', 'desc');
         
-        return view('admin.academic-years.index', compact('academicYears', 'schools', 'schoolId'));
+        // Recherche par nom
+        if ($request->filled('search')) {
+            $query->where('name', 'like', '%' . $request->search . '%');
+        }
+        
+        // Filtres par statut
+        if ($request->filled('status')) {
+            switch ($request->status) {
+                case 'active':
+                    $query->where('is_active', true);
+                    break;
+                case 'current':
+                    $query->where('is_current', true);
+                    break;
+                case 'inactive':
+                    $query->where('is_active', false);
+                    break;
+            }
+        }
+            
+        $academicYears = $query->paginate(10)->withQueryString();
+        
+        return view('admin.academic-years.index', compact('academicYears', 'mainSchool'));
     }
 
     /**
@@ -42,10 +63,14 @@ class AcademicYearController extends Controller
      */
     public function create(Request $request)
     {
-        $schools = School::active()->get();
-        $selectedSchoolId = $request->get('school_id');
+        // Pour la V1, se limiter à l'école ID 1
+        $mainSchool = School::find(1);
         
-        return view('admin.academic-years.create', compact('schools', 'selectedSchoolId'));
+        if (!$mainSchool) {
+            abort(404, 'École principale non trouvée');
+        }
+        
+        return view('admin.academic-years.create', compact('mainSchool'));
     }
 
     /**
@@ -54,31 +79,39 @@ class AcademicYearController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'school_id' => 'required|exists:schools,id',
             'name' => 'required|string|max:255',
             'start_date' => 'required|date',
             'end_date' => 'required|date|after:start_date',
             'is_active' => 'boolean',
+            'is_current' => 'boolean',
             'create_periods' => 'boolean',
         ]);
 
-        // Vérifier qu'il n'y a pas déjà une année active pour cette école si on veut activer celle-ci
+        // Pour la V1, forcer l'école ID 1
+        $schoolId = 1;
+        $mainSchool = School::find($schoolId);
+        
+        if (!$mainSchool) {
+            return back()->withErrors(['school' => 'École principale non trouvée']);
+        }
+
+        // Gérer l'année active : une seule année active par école
         if ($request->boolean('is_active')) {
-            $activeYear = AcademicYear::where('school_id', $request->school_id)
-                ->where('is_active', true)
-                ->first();
-                
-            if ($activeYear) {
-                return back()->withErrors(['is_active' => 'Il y a déjà une année académique active pour cette école.']);
-            }
+            AcademicYear::where('school_id', $schoolId)->update(['is_active' => false]);
+        }
+        
+        // Gérer l'année courante : une seule année courante par école
+        if ($request->boolean('is_current')) {
+            AcademicYear::where('school_id', $schoolId)->update(['is_current' => false]);
         }
 
         $academicYear = AcademicYear::create([
-            'school_id' => $request->school_id,
+            'school_id' => $schoolId,
             'name' => $request->name,
             'start_date' => $request->start_date,
             'end_date' => $request->end_date,
             'is_active' => $request->boolean('is_active'),
+            'is_current' => $request->boolean('is_current'),
         ]);
 
         // Créer les périodes par défaut si demandé
@@ -87,7 +120,7 @@ class AcademicYearController extends Controller
         }
 
         return redirect()
-            ->route('admin.academic-years.index', ['school_id' => $request->school_id])
+            ->route('admin.academic-years.index')
             ->with('success', 'Année académique créée avec succès.');
     }
 
@@ -174,8 +207,15 @@ class AcademicYearController extends Controller
      */
     public function toggleActive(AcademicYear $academicYear)
     {
+        // Vérifier que l'année appartient à l'école ID 1
+        if ($academicYear->school_id !== 1) {
+            return back()->withErrors(['error' => 'Action non autorisée.']);
+        }
+
         if (!$academicYear->is_active) {
-            $academicYear->activate();
+            // Désactiver toutes les autres années pour cette école
+            AcademicYear::where('school_id', 1)->update(['is_active' => false]);
+            $academicYear->update(['is_active' => true]);
             $message = 'Année académique activée avec succès.';
         } else {
             $academicYear->update(['is_active' => false]);
@@ -183,6 +223,25 @@ class AcademicYearController extends Controller
         }
 
         return back()->with('success', $message);
+    }
+
+    /**
+     * Définir comme année courante
+     */
+    public function setCurrent(AcademicYear $academicYear)
+    {
+        // Vérifier que l'année appartient à l'école ID 1
+        if ($academicYear->school_id !== 1) {
+            return back()->withErrors(['error' => 'Action non autorisée.']);
+        }
+
+        // Désactiver le statut courant pour toutes les autres années
+        AcademicYear::where('school_id', 1)->update(['is_current' => false]);
+        
+        // Activer le statut courant pour cette année
+        $academicYear->update(['is_current' => true]);
+
+        return back()->with('success', 'Année académique définie comme courante avec succès.');
     }
 
     /**

@@ -114,7 +114,7 @@
                 </div>
                 <p class="text-gray-600 dark:text-gray-400 mb-4">Gérez les Unités de Formation et de Recherche</p>
                 <div class="flex gap-2">
-                    <a href="{{ route('university.ufrs') }}" 
+                    <a href="{{ route('university.ufrs.index') }}" 
                        class="flex-1 inline-flex items-center justify-center px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm font-medium transition-colors">
                         Gérer les UFR
                     </a>
@@ -135,7 +135,7 @@
                 </div>
                 <p class="text-gray-600 dark:text-gray-400 mb-4">Organisez les départements par UFR</p>
                 <div class="flex gap-2">
-                    <a href="{{ route('university.departments') }}" 
+                    <a href="{{ route('university.departments.index') }}" 
                        class="flex-1 inline-flex items-center justify-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors">
                         Gérer
                     </a>
@@ -156,7 +156,7 @@
                 </div>
                 <p class="text-gray-600 dark:text-gray-400 mb-4">Créez des filières et programmes d'études</p>
                 <div class="flex gap-2">
-                    <a href="{{ route('university.programs') }}" 
+                    <a href="{{ route('university.programs.index') }}" 
                        class="flex-1 inline-flex items-center justify-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium transition-colors">
                         Gérer
                     </a>

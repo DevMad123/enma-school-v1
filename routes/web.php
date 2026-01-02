@@ -58,8 +58,8 @@ Route::middleware('auth')->group(function () {
         Route::post('notifications', [SettingsController::class, 'updateNotifications'])->name('notifications.update');
     });
 
-    // Routes pour le module Utilisateurs & Sécurité (middleware permission temporairement désactivé)
-    Route::middleware(['auth'])->prefix('users')->name('users.')->group(function () {
+    // Routes pour le module Utilisateurs & Sécurité avec rate limiting
+    Route::middleware(['auth', 'rate.limit.custom:user_creation'])->prefix('users')->name('users.')->group(function () {
         Route::get('/', [UserController::class, 'index'])->name('index');
         Route::get('create', [UserController::class, 'create'])->name('create');
         Route::post('/', [UserController::class, 'store'])->name('store');
@@ -67,11 +67,15 @@ Route::middleware('auth')->group(function () {
         Route::get('{user}/edit', [UserController::class, 'edit'])->name('edit');
         Route::put('{user}', [UserController::class, 'update'])->name('update');
         Route::delete('{user}', [UserController::class, 'destroy'])->name('destroy');
-        Route::post('{user}/toggle-status', [UserController::class, 'toggleStatus'])->name('toggle-status');
-        Route::post('{user}/reset-password', [UserController::class, 'resetPassword'])->name('reset-password');
+        
+        // Routes sensibles avec rate limiting strict
+        Route::middleware(['rate.limit.custom:auth'])->group(function () {
+            Route::post('{user}/toggle-status', [UserController::class, 'toggleStatus'])->name('toggle-status');
+            Route::post('{user}/reset-password', [UserController::class, 'resetPassword'])->name('reset-password');
+        });
     });
 
-    Route::middleware(['auth'])->prefix('roles')->name('roles.')->group(function () {
+    Route::middleware(['auth', 'rate.limit.custom:default'])->prefix('roles')->name('roles.')->group(function () {
         Route::get('/', [RoleController::class, 'index'])->name('index');
         Route::get('create', [RoleController::class, 'create'])->name('create');
         Route::post('/', [RoleController::class, 'store'])->name('store');
@@ -83,7 +87,7 @@ Route::middleware('auth')->group(function () {
         Route::delete('{role}/permissions/{permission}', [RoleController::class, 'destroyPermission'])->name('permissions.destroy');
     });
 
-    Route::middleware(['auth'])->prefix('security')->name('security.')->group(function () {
+    Route::middleware(['auth', 'rate.limit.custom:default'])->prefix('security')->name('security.')->group(function () {
         Route::get('settings', [SecurityController::class, 'settings'])->name('settings');
         Route::put('settings', [SecurityController::class, 'updateSettings'])->name('settings.update');
         Route::get('activity-log', [SecurityController::class, 'activityLog'])->name('activity-log');
@@ -183,14 +187,28 @@ Route::middleware('auth')->group(function () {
     });
 
     // ==========================================
-    // UNIVERSITÉ - GESTION UNIVERSITAIRE AVANCÉE
+    // UNIVERSITÉ - GESTION UNIVERSITAIRE OPTIMISÉE
     // ==========================================
-    Route::prefix('university')->name('university.')->group(function () {
+    Route::prefix('university')->name('university.')->middleware(['auth', 'university'])->group(function () {
         // Tableau de bord universitaire
         Route::get('/', [\App\Http\Controllers\UniversityController::class, 'dashboard'])->name('dashboard');
 
-        // Gestion des UFR
-        Route::get('ufrs', [\App\Http\Controllers\UniversityController::class, 'ufrs'])->name('ufrs');
+        // Resources optimisées avec nested routes
+        Route::resource('ufrs', \App\Http\Controllers\UniversityController::class, [
+            'names' => [
+                'index' => 'ufrs.index',
+                'create' => 'ufrs.create', 
+                'store' => 'ufrs.store',
+                'show' => 'ufrs.show',
+                'edit' => 'ufrs.edit',
+                'update' => 'ufrs.update',
+                'destroy' => 'ufrs.destroy',
+            ],
+            'parameters' => ['ufrs' => 'ufr']
+        ])->except(['index', 'create', 'store', 'show', 'edit', 'update', 'destroy']);
+        
+        // Routes UFR personnalisées
+        Route::get('ufrs', [\App\Http\Controllers\UniversityController::class, 'ufrs'])->name('ufrs.index');
         Route::get('ufrs/create', [\App\Http\Controllers\UniversityController::class, 'createUFR'])->name('ufrs.create');
         Route::post('ufrs', [\App\Http\Controllers\UniversityController::class, 'storeUFR'])->name('ufrs.store');
         Route::get('ufrs/{ufr}', [\App\Http\Controllers\UniversityController::class, 'showUFR'])->name('ufrs.show');
@@ -198,8 +216,8 @@ Route::middleware('auth')->group(function () {
         Route::put('ufrs/{ufr}', [\App\Http\Controllers\UniversityController::class, 'updateUFR'])->name('ufrs.update');
         Route::delete('ufrs/{ufr}', [\App\Http\Controllers\UniversityController::class, 'destroyUFR'])->name('ufrs.destroy');
 
-        // Gestion des Départements
-        Route::get('departments', [\App\Http\Controllers\UniversityController::class, 'departments'])->name('departments');
+        // Routes Départements personnalisées
+        Route::get('departments', [\App\Http\Controllers\UniversityController::class, 'departments'])->name('departments.index');
         Route::get('departments/create', [\App\Http\Controllers\UniversityController::class, 'createDepartment'])->name('departments.create');
         Route::post('departments', [\App\Http\Controllers\UniversityController::class, 'storeDepartment'])->name('departments.store');
         Route::get('departments/{department}', [\App\Http\Controllers\UniversityController::class, 'showDepartment'])->name('departments.show');
@@ -207,8 +225,8 @@ Route::middleware('auth')->group(function () {
         Route::put('departments/{department}', [\App\Http\Controllers\UniversityController::class, 'updateDepartment'])->name('departments.update');
         Route::delete('departments/{department}', [\App\Http\Controllers\UniversityController::class, 'destroyDepartment'])->name('departments.destroy');
 
-        // Gestion des Programmes
-        Route::get('programs', [\App\Http\Controllers\UniversityController::class, 'programs'])->name('programs');
+        // Routes Programmes personnalisées
+        Route::get('programs', [\App\Http\Controllers\UniversityController::class, 'programs'])->name('programs.index');
         Route::get('programs/create', [\App\Http\Controllers\UniversityController::class, 'createProgram'])->name('programs.create');
         Route::post('programs', [\App\Http\Controllers\UniversityController::class, 'storeProgram'])->name('programs.store');
         Route::get('programs/{program}', [\App\Http\Controllers\UniversityController::class, 'showProgram'])->name('programs.show');
@@ -216,15 +234,46 @@ Route::middleware('auth')->group(function () {
         Route::put('programs/{program}', [\App\Http\Controllers\UniversityController::class, 'updateProgram'])->name('programs.update');
         Route::delete('programs/{program}', [\App\Http\Controllers\UniversityController::class, 'destroyProgram'])->name('programs.destroy');
 
-        // Gestion des Semestres
-        Route::get('programs/{program}/semesters', [\App\Http\Controllers\UniversityController::class, 'semesters'])->name('semesters');
-        Route::get('programs/{program}/semesters/create', [\App\Http\Controllers\UniversityController::class, 'createSemester'])->name('semesters.create');
-        Route::post('programs/{program}/semesters', [\App\Http\Controllers\UniversityController::class, 'storeSemester'])->name('semesters.store');
+        // Routes Semestres avec hiérarchie optimisée
+        Route::prefix('programs/{program}')->name('programs.')->group(function () {
+            Route::get('semesters', [\App\Http\Controllers\UniversityController::class, 'semesters'])->name('semesters.index');
+            Route::get('semesters/create', [\App\Http\Controllers\UniversityController::class, 'createSemester'])->name('semesters.create');
+            Route::post('semesters', [\App\Http\Controllers\UniversityController::class, 'storeSemester'])->name('semesters.store');
+            Route::get('semesters/{semester}', [\App\Http\Controllers\UniversityController::class, 'showSemester'])->name('semesters.show');
+            Route::get('semesters/{semester}/edit', [\App\Http\Controllers\UniversityController::class, 'editSemester'])->name('semesters.edit');
+            Route::put('semesters/{semester}', [\App\Http\Controllers\UniversityController::class, 'updateSemester'])->name('semesters.update');
+            Route::delete('semesters/{semester}', [\App\Http\Controllers\UniversityController::class, 'destroySemester'])->name('semesters.destroy');
+        });
 
-        // Gestion des Unités d'Enseignement
-        Route::get('semesters/{semester}/course-units', [\App\Http\Controllers\UniversityController::class, 'courseUnits'])->name('course-units');
-        Route::get('semesters/{semester}/course-units/create', [\App\Http\Controllers\UniversityController::class, 'createCourseUnit'])->name('course-units.create');
-        Route::post('semesters/{semester}/course-units', [\App\Http\Controllers\UniversityController::class, 'storeCourseUnit'])->name('course-units.store');
+        // Routes Semestres sans hiérarchie pour les templates existants
+        Route::get('programs/{program}/semesters', [\App\Http\Controllers\UniversityController::class, 'semesters'])->name('programs.semesters.index');
+        Route::get('programs/{program}/semesters/create', [\App\Http\Controllers\UniversityController::class, 'createSemester'])->name('programs.semesters.create');
+        Route::post('programs/{program}/semesters', [\App\Http\Controllers\UniversityController::class, 'storeSemester'])->name('programs.semesters.store');
+        Route::delete('programs/{program}/semesters/{semester}', [\App\Http\Controllers\UniversityController::class, 'destroySemester'])->name('semesters.destroy');
+
+        // Routes Unités d'Enseignement optimisées
+        Route::prefix('semesters/{semester}')->name('semesters.')->group(function () {
+            Route::get('course-units', [\App\Http\Controllers\UniversityController::class, 'courseUnits'])->name('course-units.index');
+            Route::get('course-units/create', [\App\Http\Controllers\UniversityController::class, 'createCourseUnit'])->name('course-units.create');
+            Route::post('course-units', [\App\Http\Controllers\UniversityController::class, 'storeCourseUnit'])->name('course-units.store');
+        });
+        
+        // Routes Course Units globales (sans semestre parent)
+        Route::get('course-units/{courseUnit}', [\App\Http\Controllers\UniversityController::class, 'showCourseUnit'])->name('course-units.show');
+        Route::get('course-units/{courseUnit}/edit', [\App\Http\Controllers\UniversityController::class, 'editCourseUnit'])->name('course-units.edit');
+        Route::put('course-units/{courseUnit}', [\App\Http\Controllers\UniversityController::class, 'updateCourseUnit'])->name('course-units.update');
+        Route::delete('course-units/{courseUnit}', [\App\Http\Controllers\UniversityController::class, 'destroyCourseUnit'])->name('course-units.destroy');
+
+        // Routes ECUE (Éléments Constitutifs d'Unités d'Enseignement)
+        Route::prefix('course-units/{courseUnit}')->name('course-units.')->group(function () {
+            Route::get('elements', [\App\Http\Controllers\UniversityController::class, 'showCourseUnitElements'])->name('elements.index');
+            Route::get('elements/create', [\App\Http\Controllers\UniversityController::class, 'createCourseUnitElement'])->name('elements.create');
+            Route::post('elements', [\App\Http\Controllers\UniversityController::class, 'storeCourseUnitElement'])->name('elements.store');
+            Route::get('elements/{element}', [\App\Http\Controllers\UniversityController::class, 'showCourseUnitElement'])->name('elements.show');
+            Route::get('elements/{element}/edit', [\App\Http\Controllers\UniversityController::class, 'editCourseUnitElement'])->name('elements.edit');
+            Route::put('elements/{element}', [\App\Http\Controllers\UniversityController::class, 'updateCourseUnitElement'])->name('elements.update');
+            Route::delete('elements/{element}', [\App\Http\Controllers\UniversityController::class, 'destroyCourseUnitElement'])->name('elements.destroy');
+        });
     });
 
     Route::resource('enrollments', EnrollmentController::class);
@@ -280,6 +329,7 @@ Route::middleware('auth')->group(function () {
         // MODULE A2 - Années académiques & Périodes
         Route::resource('academic-years', AcademicYearController::class);
         Route::patch('academic-years/{academicYear}/toggle-active', [AcademicYearController::class, 'toggleActive'])->name('academic-years.toggle-active');
+        Route::patch('academic-years/{academicYear}/set-current', [AcademicYearController::class, 'setCurrent'])->name('academic-years.set-current');
         Route::get('academic-years/{academicYear}/periods', [AcademicYearController::class, 'managePeriods'])->name('academic-years.manage-periods');
         Route::post('academic-years/{academicYear}/generate-periods', [AcademicYearController::class, 'generatePeriods'])->name('academic-years.generate-periods');
         
@@ -310,6 +360,24 @@ Route::middleware('auth')->group(function () {
             Route::get('/chart-data', [SupervisionController::class, 'getDashboardChartData'])->name('chart-data');
         });
     });
+});
+
+// MODULE 3 - Routes financières avec protection renforcée
+Route::middleware(['auth', 'financial'])->prefix('finance')->name('finance.')->group(function () {
+    Route::get('/', [\App\Http\Controllers\FinanceController::class, 'index'])->name('index');
+    
+    // Gestion des frais scolaires avec rate limiting
+    Route::prefix('school-fees')->name('school-fees.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\FinanceController::class, 'schoolFees'])->name('index');
+        Route::get('create', [\App\Http\Controllers\FinanceController::class, 'createSchoolFee'])->name('create');
+        Route::post('store', [\App\Http\Controllers\FinanceController::class, 'storeSchoolFee'])
+            ->middleware('rate.limit.custom:financial')
+            ->name('store');
+    });
+    
+    // Autres routes financières
+    Route::get('payments', [\App\Http\Controllers\FinanceController::class, 'payments'])->name('payments');
+    Route::get('reports', [\App\Http\Controllers\FinanceController::class, 'reports'])->name('reports');
 });
 
 require __DIR__.'/auth.php';

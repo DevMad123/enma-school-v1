@@ -105,6 +105,24 @@ class School extends Model
     }
 
     /**
+     * Relations avec le personnel et les étudiants
+     */
+    public function staff()
+    {
+        return $this->hasMany(Staff::class);
+    }
+
+    public function students()
+    {
+        return $this->hasMany(Student::class);
+    }
+
+    public function classes()
+    {
+        return $this->hasMany(SchoolClass::class);
+    }
+
+    /**
      * Obtenir l'année académique active de cette école
      */
     public function getActiveAcademicYear()

@@ -25,42 +25,66 @@
 </div>
 
 <!-- Form -->
-<div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+<div class="mx-auto">
     <div class="bg-white dark:bg-gray-800 shadow rounded-lg">
         <form action="{{ route('admin.academic-years.store') }}" method="POST" class="space-y-6 p-6">
             @csrf
             
-            <!-- École -->
+            <!-- École (fixe pour la V1) -->
             <div>
-                <label for="school_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    École <span class="text-red-500">*</span>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    École
                 </label>
-                <select name="school_id" id="school_id" required
-                        class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent @error('school_id') border-red-500 @enderror">
-                    <option value="">Sélectionner une école</option>
-                    @foreach($schools as $school)
-                        <option value="{{ $school->id }}" 
-                                {{ old('school_id', $selectedSchoolId) == $school->id ? 'selected' : '' }}
-                                data-academic-system="{{ $school->academic_system }}">
-                            {{ $school->name }}
-                            <span class="text-sm text-gray-500">({{ ucfirst($school->academic_system) }})</span>
-                        </option>
-                    @endforeach
-                </select>
-                @error('school_id')
-                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                @enderror
-                
-                <div id="school-info" class="mt-2 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg hidden">
-                    <div class="flex items-center">
-                        <svg class="w-5 h-5 text-blue-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                <div class="w-full p-3 bg-gray-50 dark:bg-gray-600 border border-gray-300 dark:border-gray-600 rounded-lg">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="font-medium text-gray-900 dark:text-white">{{ $mainSchool->name }}</h3>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">
+                                Type : 
+                                @if($mainSchool->type === 'university')
+                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-400">
+                                        🎓 Universitaire
+                                    </span>
+                                @else
+                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400">
+                                        🏫 Pré-universitaire
+                                    </span>
+                                @endif
+                                | Système : {{ ucfirst($mainSchool->academic_system) }}
+                            </p>
+                        </div>
+                        <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
                         </svg>
-                        <p class="text-sm text-blue-800 dark:text-blue-200">
-                            <span id="system-info"></span>
-                        </p>
                     </div>
                 </div>
+                
+                <!-- Champ caché pour l'ID de l'école -->
+                <input type="hidden" name="school_id" value="{{ $mainSchool->id }}">
+                
+                @if($mainSchool->type === 'university')
+                    <div class="mt-2 p-3 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-700 rounded-lg">
+                        <div class="flex items-center">
+                            <svg class="w-5 h-5 text-purple-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                            </svg>
+                            <p class="text-sm text-purple-800 dark:text-purple-200">
+                                🎓 Mode universitaire : Gestion des UFR, départements, programmes et semestres
+                            </p>
+                        </div>
+                    </div>
+                @else
+                    <div class="mt-2 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg">
+                        <div class="flex items-center">
+                            <svg class="w-5 h-5 text-blue-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                            </svg>
+                            <p class="text-sm text-blue-800 dark:text-blue-200">
+                                🏫 Mode pré-universitaire : Gestion des cycles, niveaux et classes
+                            </p>
+                        </div>
+                    </div>
+                @endif
             </div>
 
             <!-- Nom de l'année -->
@@ -123,6 +147,24 @@
 
                 <div class="flex items-start">
                     <div class="flex items-center h-5">
+                        <input type="checkbox" name="is_current" id="is_current" value="1" {{ old('is_current') ? 'checked' : '' }}
+                               class="rounded border-gray-300 dark:border-gray-600 text-purple-600 focus:ring-purple-500 @error('is_current') border-red-500 @enderror">
+                    </div>
+                    <div class="ml-3 text-sm">
+                        <label for="is_current" class="font-medium text-gray-700 dark:text-gray-300">
+                            Définir comme année courante
+                        </label>
+                        <p class="text-gray-500 dark:text-gray-400">
+                            L'année courante est utilisée par défaut dans les opérations (créations semestres, etc.).
+                        </p>
+                    </div>
+                    @error('is_current')
+                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <div class="flex items-start">
+                    <div class="flex items-center h-5">
                         <input type="checkbox" name="create_periods" id="create_periods" value="1" checked
                                class="rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500">
                     </div>
@@ -131,7 +173,11 @@
                             Créer automatiquement les périodes
                         </label>
                         <p class="text-gray-500 dark:text-gray-400">
-                            Crée automatiquement les trimestres ou semestres selon le système académique de l'école.
+                            @if($mainSchool->academic_system === 'trimestre')
+                                Crée automatiquement 3 trimestres pour l'année académique.
+                            @else
+                                Crée automatiquement 2 semestres pour l'année académique.
+                            @endif
                         </p>
                     </div>
                 </div>

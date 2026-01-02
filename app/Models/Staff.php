@@ -88,7 +88,7 @@ class Staff extends Model
     public function getYearsOfServiceAttribute(): int
     {
         if (!$this->hire_date) return 0;
-        return $this->hire_date->diffInYears(now());
+        return \Carbon\Carbon::parse($this->hire_date)->diffInYears(now());
     }
 
     /**

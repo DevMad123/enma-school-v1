@@ -4,6 +4,8 @@ namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Schema;
+use App\Models\CourseUnitElement;
+use App\Observers\CourseUnitElementObserver;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -27,5 +29,8 @@ class AppServiceProvider extends ServiceProvider
         if (file_exists(app_path('helpers.php'))) {
             require_once app_path('helpers.php');
         }
+
+        // Enregistrement des Observers
+        CourseUnitElement::observe(CourseUnitElementObserver::class);
     }
 }

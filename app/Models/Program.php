@@ -56,6 +56,37 @@ class Program extends Model
     }
 
     /**
+     * Relation avec les semestres actifs uniquement
+     */
+    public function activeSemesters(): HasMany
+    {
+        return $this->semesters()->active();
+    }
+
+    /**
+     * Relation avec le semestre actuel (en cours)
+     */
+    public function currentSemester()
+    {
+        return $this->semesters()->where('is_current', true)->first();
+    }
+
+    /**
+     * Unités d'enseignement via les semestres
+     */
+    public function courseUnits()
+    {
+        return $this->hasManyThrough(
+            CourseUnit::class,
+            Semester::class,
+            'program_id',    // Foreign key sur semesters table
+            'semester_id',   // Foreign key sur course_units table
+            'id',           // Local key sur programs table
+            'id'            // Local key sur semesters table
+        );
+    }
+
+    /**
      * Scope pour les programmes actifs
      */
     public function scopeActive($query)

@@ -65,8 +65,8 @@
                 <div>
                     <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Type d'établissement</dt>
                     <dd class="mt-1">
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $school->type === 'secondary' ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800' }}">
-                            {{ $school->type === 'secondary' ? 'Secondaire' : 'Universitaire' }}
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $school->type === 'pre_university' ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800' }}">
+                            {{ $school->type === 'pre_university' ? 'Pré Universitaire' : 'Universitaire' }}
                         </span>
                     </dd>
                 </div>
