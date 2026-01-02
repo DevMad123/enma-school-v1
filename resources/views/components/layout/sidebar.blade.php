@@ -109,7 +109,8 @@
                     @endif
                 </a>
 
-                <!-- Module Académique (Structure Académique) -->
+                <!-- Module Académique (Structure Académique) - Seulement pour les écoles pré-universitaires -->
+                @if(school() && school()->isPreUniversity())
                 <div class="pt-4">
                     <h3 class="sidebar-section-title">Structure Académique</h3>
                     
@@ -134,6 +135,7 @@
                         <span>Matières</span>
                     </a>
                 </div>
+                @endif
 
                 <!-- MODULE UNIVERSITAIRE (seulement pour les universités) -->
                 @if(school() && school()->isUniversity())
@@ -170,17 +172,33 @@
                         </svg>
                         <span>Programmes</span>
                     </a>
+                    
+                    <a href="{{ route('university.teachers.index') }}" class="sidebar-link {{ request()->routeIs('university.teachers*') ? 'active' : '' }}">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                        </svg>
+                        <span>Enseignants</span>
+                        @php $universityTeachers = \App\Models\Teacher::whereNotNull('ufr_id')->where('status', 'active')->count(); @endphp
+                        @if($universityTeachers > 0)
+                            <span class="ml-auto bg-indigo-100 text-indigo-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
+                                {{ $universityTeachers }}
+                            </span>
+                        @endif
+                    </a>
                 </div>
                 @endif
 
+                @if(school() && school()->isPreUniversity())
                 <a href="{{ route('enrollments.index') }}" class="sidebar-link {{ request()->routeIs('enrollments.*') ? 'active' : '' }}">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z"/>
                     </svg>
                     <span>Étudiants</span>
                 </a>
+                @endif
 
-                <!-- MODULE A4 - PERSONNEL & AFFECTATIONS PÉDAGOGIQUES -->
+                <!-- MODULE A4 - PERSONNEL & AFFECTATIONS PÉDAGOGIQUES - Seulement pour les écoles pré-universitaires -->
+                @if(school() && school()->isPreUniversity())
                 <div class="pt-4">
                     <h3 class="sidebar-section-title">Personnel & Affectations</h3>
                     
@@ -217,13 +235,16 @@
                         <span>Planning</span>
                     </a>
                 </div>
+                @endif
 
+                @if(school() && school()->isPreUniversity())
                 <a href="{{ route('report-cards.index') }}" class="sidebar-link {{ request()->routeIs('report-cards.*') ? 'active' : '' }}">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
                     </svg>
                     <span>Bulletins</span>
                 </a>
+                @endif
             </div>
         @endif
 

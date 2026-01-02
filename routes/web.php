@@ -11,6 +11,7 @@ use App\Http\Controllers\SecurityController;
 use App\Http\Controllers\Admin\AcademicYearController;
 // MODULE A4 - Contrôleurs du personnel
 use App\Http\Controllers\Admin\TeacherController;
+use App\Http\Controllers\UniversityTeacherController;
 use App\Http\Controllers\Admin\TeacherAssignmentController as AdminTeacherAssignmentController;
 // MODULE A5 - Contrôleur des paramètres pédagogiques
 use App\Http\Controllers\Admin\PedagogicalSettingsController;
@@ -95,24 +96,30 @@ Route::middleware('auth')->group(function () {
     });
 
     // Routes pour les inscriptions
-    Route::resource('enrollments', EnrollmentController::class);
-    Route::post('enrollments/{enrollment}/complete', [EnrollmentController::class, 'complete'])->name('enrollments.complete');
-    Route::post('enrollments/{enrollment}/cancel', [EnrollmentController::class, 'cancel'])->name('enrollments.cancel');
-    Route::post('quick-enroll', [EnrollmentController::class, 'quickEnroll'])->name('enrollments.quick');
+    Route::middleware(['auth', 'pre_university'])->group(function () {
+        Route::resource('enrollments', EnrollmentController::class);
+        Route::post('enrollments/{enrollment}/complete', [EnrollmentController::class, 'complete'])->name('enrollments.complete');
+        Route::post('enrollments/{enrollment}/cancel', [EnrollmentController::class, 'cancel'])->name('enrollments.cancel');
+        Route::post('quick-enroll', [EnrollmentController::class, 'quickEnroll'])->name('enrollments.quick');
+    });
 
     // Routes pour les affectations d'enseignants
-    Route::resource('teacher-assignments', TeacherAssignmentController::class);
-    Route::get('teacher/{teacher}/assignments', [TeacherAssignmentController::class, 'teacherAssignments'])->name('teacher.assignments');
-    Route::get('class/{class}/teachers', [TeacherAssignmentController::class, 'classTeachers'])->name('class.teachers');
-    Route::post('quick-assign-teacher', [TeacherAssignmentController::class, 'quickAssign'])->name('teacher-assignments.quick');
+    Route::middleware(['auth', 'pre_university'])->group(function () {
+        Route::resource('teacher-assignments', TeacherAssignmentController::class);
+        Route::get('teacher/{teacher}/assignments', [TeacherAssignmentController::class, 'teacherAssignments'])->name('teacher.assignments');
+        Route::get('class/{class}/teachers', [TeacherAssignmentController::class, 'classTeachers'])->name('class.teachers');
+        Route::post('quick-assign-teacher', [TeacherAssignmentController::class, 'quickAssign'])->name('teacher-assignments.quick');
+    });
 
     // Routes pour les bulletins scolaires
-    Route::resource('report-cards', \App\Http\Controllers\ReportCardController::class);
-    Route::post('report-cards/{reportCard}/recalculate', [\App\Http\Controllers\ReportCardController::class, 'recalculate'])->name('report-cards.recalculate');
-    Route::post('report-cards/{reportCard}/publish', [\App\Http\Controllers\ReportCardController::class, 'publish'])->name('report-cards.publish');
-    Route::post('report-cards/{reportCard}/finalize', [\App\Http\Controllers\ReportCardController::class, 'finalize'])->name('report-cards.finalize');
-    Route::get('report-cards/{reportCard}/pdf', [\App\Http\Controllers\ReportCardController::class, 'exportPdf'])->name('report-cards.pdf');
-    Route::post('report-cards/bulk-generate', [\App\Http\Controllers\ReportCardController::class, 'bulkGenerate'])->name('report-cards.bulk-generate');
+    Route::middleware(['auth', 'pre_university'])->group(function () {
+        Route::resource('report-cards', \App\Http\Controllers\ReportCardController::class);
+        Route::post('report-cards/{reportCard}/recalculate', [\App\Http\Controllers\ReportCardController::class, 'recalculate'])->name('report-cards.recalculate');
+        Route::post('report-cards/{reportCard}/publish', [\App\Http\Controllers\ReportCardController::class, 'publish'])->name('report-cards.publish');
+        Route::post('report-cards/{reportCard}/finalize', [\App\Http\Controllers\ReportCardController::class, 'finalize'])->name('report-cards.finalize');
+        Route::get('report-cards/{reportCard}/pdf', [\App\Http\Controllers\ReportCardController::class, 'exportPdf'])->name('report-cards.pdf');
+        Route::post('report-cards/bulk-generate', [\App\Http\Controllers\ReportCardController::class, 'bulkGenerate'])->name('report-cards.bulk-generate');
+    });
 
     // Routes pour la gestion financière
     Route::prefix('finance')->name('finance.')->group(function () {
@@ -152,7 +159,7 @@ Route::middleware('auth')->group(function () {
     });
 
     // Routes pour le module académique (Structure Académique)
-    Route::prefix('academic')->name('academic.')->group(function () {
+    Route::prefix('academic')->name('academic.')->middleware(['auth', 'pre_university'])->group(function () {
         // Gestion des niveaux
         Route::get('levels', [\App\Http\Controllers\AcademicController::class, 'levels'])->name('levels');
         Route::get('levels/create', [\App\Http\Controllers\AcademicController::class, 'createLevel'])->name('levels.create');
@@ -274,20 +281,26 @@ Route::middleware('auth')->group(function () {
             Route::put('elements/{element}', [\App\Http\Controllers\UniversityController::class, 'updateCourseUnitElement'])->name('elements.update');
             Route::delete('elements/{element}', [\App\Http\Controllers\UniversityController::class, 'destroyCourseUnitElement'])->name('elements.destroy');
         });
-    });
 
-    Route::resource('enrollments', EnrollmentController::class);
-    Route::resource('teacher-assignments', TeacherAssignmentController::class);
-    Route::get('teacher/{teacher}/assignments', [TeacherAssignmentController::class, 'teacherAssignments'])->name('teacher.assignments');
-    Route::get('class/{class}/teachers', [TeacherAssignmentController::class, 'classTeachers'])->name('class.teachers');
-    Route::post('quick-assign-teacher', [TeacherAssignmentController::class, 'quickAssign'])->name('teacher-assignments.quick');
+        // Routes Enseignants Universitaires - MODULE UNIVERSITAIRE A4
+        Route::prefix('teachers')->name('teachers.')->group(function () {
+            Route::get('/', [UniversityTeacherController::class, 'index'])->name('index');
+            Route::get('create', [UniversityTeacherController::class, 'create'])->name('create');
+            Route::post('/', [UniversityTeacherController::class, 'store'])->name('store');
+            Route::get('{teacher}', [UniversityTeacherController::class, 'show'])->name('show');
+            Route::get('{teacher}/edit', [UniversityTeacherController::class, 'edit'])->name('edit');
+            Route::put('{teacher}', [UniversityTeacherController::class, 'update'])->name('update');
+            Route::delete('{teacher}', [UniversityTeacherController::class, 'destroy'])->name('destroy');
+            Route::post('{teacher}/toggle-status', [UniversityTeacherController::class, 'toggleStatus'])->name('toggle-status');
+        });
+    });
 
     // ==========================================
     // MODULE A4 - GESTION DU PERSONNEL & AFFECTATIONS PÉDAGOGIQUES
     // ==========================================
     
     // Routes pour la gestion des enseignants
-    Route::prefix('admin/teachers')->name('admin.teachers.')->group(function () {
+    Route::prefix('admin/teachers')->name('admin.teachers.')->middleware(['auth', 'pre_university'])->group(function () {
         Route::get('/', [TeacherController::class, 'index'])->name('index');
         Route::get('create', [TeacherController::class, 'create'])->name('create');
         Route::post('/', [TeacherController::class, 'store'])->name('store');
@@ -300,7 +313,7 @@ Route::middleware('auth')->group(function () {
     });
 
     // Routes pour la gestion des affectations pédagogiques 
-    Route::prefix('admin/assignments')->name('admin.assignments.')->group(function () {
+    Route::prefix('admin/assignments')->name('admin.assignments.')->middleware(['auth', 'pre_university'])->group(function () {
         Route::get('/', [AdminTeacherAssignmentController::class, 'index'])->name('index');
         Route::get('create', [AdminTeacherAssignmentController::class, 'create'])->name('create');
         Route::get('schedule', [AdminTeacherAssignmentController::class, 'schedule'])->name('schedule');
@@ -311,6 +324,23 @@ Route::middleware('auth')->group(function () {
         Route::put('{assignment}', [AdminTeacherAssignmentController::class, 'update'])->name('update');
         Route::delete('{assignment}', [AdminTeacherAssignmentController::class, 'destroy'])->name('destroy');
         Route::post('{assignment}/toggle-status', [AdminTeacherAssignmentController::class, 'toggleStatus'])->name('toggle-status');
+    });
+
+    // Routes pour la gestion des étudiants (MODULE A3 - Structure académique)
+    Route::prefix('admin/students')->name('admin.students.')->middleware(['auth', 'pre_university'])->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\StudentController::class, 'index'])->name('index');
+        Route::get('create', [\App\Http\Controllers\Admin\StudentController::class, 'create'])->name('create');
+        Route::post('/', [\App\Http\Controllers\Admin\StudentController::class, 'store'])->name('store');
+        Route::get('{student}', [\App\Http\Controllers\Admin\StudentController::class, 'show'])->name('show');
+        Route::get('{student}/edit', [\App\Http\Controllers\Admin\StudentController::class, 'edit'])->name('edit');
+        Route::put('{student}', [\App\Http\Controllers\Admin\StudentController::class, 'update'])->name('update');
+        Route::delete('{student}', [\App\Http\Controllers\Admin\StudentController::class, 'destroy'])->name('destroy');
+        Route::post('{student}/toggle-status', [\App\Http\Controllers\Admin\StudentController::class, 'toggleStatus'])->name('toggle-status');
+        
+        // Routes utilitaires
+        Route::get('export', [\App\Http\Controllers\Admin\StudentController::class, 'export'])->name('export');
+        Route::post('import', [\App\Http\Controllers\Admin\StudentController::class, 'import'])->name('import');
+        Route::get('api/by-class', [\App\Http\Controllers\Admin\StudentController::class, 'getByClass'])->name('api.by-class');
     });
 
     // Routes pour les bulletins scolaires
@@ -360,24 +390,6 @@ Route::middleware('auth')->group(function () {
             Route::get('/chart-data', [SupervisionController::class, 'getDashboardChartData'])->name('chart-data');
         });
     });
-});
-
-// MODULE 3 - Routes financières avec protection renforcée
-Route::middleware(['auth', 'financial'])->prefix('finance')->name('finance.')->group(function () {
-    Route::get('/', [\App\Http\Controllers\FinanceController::class, 'index'])->name('index');
-    
-    // Gestion des frais scolaires avec rate limiting
-    Route::prefix('school-fees')->name('school-fees.')->group(function () {
-        Route::get('/', [\App\Http\Controllers\FinanceController::class, 'schoolFees'])->name('index');
-        Route::get('create', [\App\Http\Controllers\FinanceController::class, 'createSchoolFee'])->name('create');
-        Route::post('store', [\App\Http\Controllers\FinanceController::class, 'storeSchoolFee'])
-            ->middleware('rate.limit.custom:financial')
-            ->name('store');
-    });
-    
-    // Autres routes financières
-    Route::get('payments', [\App\Http\Controllers\FinanceController::class, 'payments'])->name('payments');
-    Route::get('reports', [\App\Http\Controllers\FinanceController::class, 'reports'])->name('reports');
 });
 
 require __DIR__.'/auth.php';

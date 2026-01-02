@@ -21,6 +21,13 @@ class Teacher extends Model
         'hire_date',
         'qualifications',
         'teaching_subjects',
+        // Champs universitaires
+        'ufr_id',
+        'department_id',
+        'academic_rank',
+        'research_interests',
+        'office_location',
+        'salary',
     ];
 
     protected $casts = [
@@ -42,6 +49,32 @@ class Teacher extends Model
     public function school(): BelongsTo
     {
         return $this->belongsTo(School::class);
+    }
+
+    /**
+     * Relation avec UFR (universitaire)
+     */
+    public function ufr(): BelongsTo
+    {
+        return $this->belongsTo(UFR::class);
+    }
+
+    /**
+     * Relation avec le département (universitaire)
+     */
+    public function department(): BelongsTo
+    {
+        return $this->belongsTo(Department::class);
+    }
+
+    /**
+     * Relation avec les programmes (universitaire)
+     */
+    public function programs()
+    {
+        return $this->belongsToMany(Program::class, 'teacher_program_assignments')
+                    ->withPivot(['semester_id', 'course_unit_id', 'weekly_hours', 'is_active'])
+                    ->withTimestamps();
     }
 
     /**

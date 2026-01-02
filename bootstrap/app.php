@@ -20,6 +20,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'school.exists' => \App\Http\Middleware\EnsureSchoolExists::class,
             'admin.access' => \App\Http\Middleware\AdminAccess::class,
             'university' => \App\Http\Middleware\UniversityMiddleware::class,
+            'pre_university' => \App\Http\Middleware\PreUniversityMiddleware::class,
             'rate.limit.custom' => \App\Http\Middleware\CustomRateLimit::class,
         ]);
         

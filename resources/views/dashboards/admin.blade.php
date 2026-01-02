@@ -312,6 +312,224 @@
             </x-dashboard.card>
         </div>
 
+        <!-- MODULE A3 - Structure Académique (Conditionnement selon le type d'école) -->
+        @php
+            $school = \App\Models\School::getActiveSchool();
+        @endphp
+        
+        @if($school && $school->isPreUniversity())
+        <!-- Affichage pour les écoles pré-universitaires -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <x-dashboard.card 
+                title="📚 MODULE A3 — Structure Académique (Pré-universitaire)"
+                subtitle="Gestion complète de la structure éducative"
+            >
+                <x-slot name="actions">
+                    <a href="{{ route('academic.levels') }}" 
+                       class="inline-flex items-center px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium rounded-lg transition-colors duration-200">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h4a1 1 0 011 1v5m-6 0V9a1 1 0 011-1h4a1 1 0 011 1v2"/>
+                        </svg>
+                        Gestion Complète
+                    </a>
+                </x-slot>
+
+                <div class="p-4 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 rounded-lg">
+                    <h4 class="font-semibold text-blue-700 dark:text-blue-300 mb-3">🏫 Gestion Pré-universitaire</h4>
+                    <div class="space-y-2">
+                        <a href="{{ route('academic.levels') }}" 
+                           class="block text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300">
+                            📊 Niveaux/Cycles
+                        </a>
+                        <a href="{{ route('academic.classes') }}" 
+                           class="block text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300">
+                            🏛️ Classes
+                        </a>
+                        <a href="{{ route('academic.subjects') }}" 
+                           class="block text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300">
+                            📖 Matières
+                        </a>
+                        <a href="{{ route('admin.students.index') }}" 
+                           class="block text-sm font-medium text-blue-700 dark:text-blue-300 hover:text-blue-900 dark:hover:text-blue-200">
+                            👥 Étudiants
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="mt-4 pt-3 border-t border-gray-200 dark:border-gray-700">
+                    <div class="flex items-center justify-between text-sm">
+                        <span class="text-gray-600 dark:text-gray-400">État du Module A3:</span>
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400">
+                            ✅ 100% Complet
+                        </span>
+                    </div>
+                </div>
+            </x-dashboard.card>
+
+            <!-- Actions rapides Structure Académique Pré-universitaire -->
+            <x-dashboard.card 
+                title="⚡ Actions Rapides - Structure Pré-universitaire"
+                subtitle="Raccourcis pour la gestion académique"
+            >
+                <div class="grid grid-cols-1 gap-3">
+                    <!-- Créations rapides -->
+                    <div class="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                        <h5 class="font-medium text-gray-900 dark:text-white mb-2">➕ Créations Rapides</h5>
+                        <div class="grid grid-cols-2 gap-2">
+                            <a href="{{ route('admin.students.create') }}" 
+                               class="text-sm px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-center">
+                                👤 Nouvel Étudiant
+                            </a>
+                            <a href="{{ route('academic.classes.create') }}" 
+                               class="text-sm px-3 py-2 bg-green-600 text-white rounded hover:bg-green-700 text-center">
+                                🏛️ Nouvelle Classe
+                            </a>
+                            <a href="{{ route('academic.subjects.create') }}" 
+                               class="text-sm px-3 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 text-center">
+                                📖 Nouvelle Matière
+                            </a>
+                            <a href="{{ route('academic.levels.create') }}" 
+                               class="text-sm px-3 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 text-center">
+                                📊 Nouveau Niveau
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Gestion et Rapports -->
+                    <div class="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                        <h5 class="font-medium text-gray-900 dark:text-white mb-2">📊 Gestion & Rapports</h5>
+                        <div class="space-y-2">
+                            <a href="{{ route('enrollments.index') }}" 
+                               class="flex items-center text-sm text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400">
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z"/>
+                                </svg>
+                                Inscriptions
+                            </a>
+                            <a href="{{ route('admin.teachers.index') }}" 
+                               class="flex items-center text-sm text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400">
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h4a1 1 0 011 1v5m-6 0V9a1 1 0 011-1h4a1 1 0 011 1v2"/>
+                                </svg>
+                                Enseignants
+                            </a>
+                            <a href="{{ route('admin.assignments.index') }}" 
+                               class="flex items-center text-sm text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400">
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                                </svg>
+                                Affectations Péda.
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </x-dashboard.card>
+        </div>
+        @elseif($school && $school->isUniversity())
+        <!-- Affichage pour les écoles universitaires -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <x-dashboard.card 
+                title="🎓 MODULE A3 — Structure Académique (Universitaire)"
+                subtitle="Gestion complète de la structure universitaire"
+            >
+                <x-slot name="actions">
+                    <a href="{{ route('university.dashboard') }}" 
+                       class="inline-flex items-center px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium rounded-lg transition-colors duration-200">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h4a1 1 0 011 1v5m-6 0V9a1 1 0 011-1h4a1 1 0 011 1v2"/>
+                        </svg>
+                        Gestion Universitaire
+                    </a>
+                </x-slot>
+
+                <div class="p-4 bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 rounded-lg">
+                    <h4 class="font-semibold text-purple-700 dark:text-purple-300 mb-3">🎓 Gestion Universitaire</h4>
+                    <div class="space-y-2">
+                        <a href="{{ route('university.ufrs.index') }}" 
+                           class="block text-sm text-purple-600 dark:text-purple-400 hover:text-purple-800 dark:hover:text-purple-300">
+                            🏛️ UFR (Unités de Formation)
+                        </a>
+                        <a href="{{ route('university.departments.index') }}" 
+                           class="block text-sm text-purple-600 dark:text-purple-400 hover:text-purple-800 dark:hover:text-purple-300">
+                            🏢 Départements
+                        </a>
+                        <a href="{{ route('university.programs.index') }}" 
+                           class="block text-sm text-purple-600 dark:text-purple-400 hover:text-purple-800 dark:hover:text-purple-300">
+                            📚 Programmes d'Études
+                        </a>
+                        <a href="{{ route('university.dashboard') }}" 
+                           class="block text-sm font-medium text-purple-700 dark:text-purple-300 hover:text-purple-900 dark:hover:text-purple-200">
+                            🎯 Dashboard Universitaire
+                        </a>
+                    </div>
+                    
+                    <div class="mt-3 pt-2 border-t border-purple-200 dark:border-purple-700">
+                        <p class="text-xs text-purple-600 dark:text-purple-400">
+                            ℹ️ Les fonctionnalités pré-universitaires sont masquées pour cette école universitaire.
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="mt-4 pt-3 border-t border-gray-200 dark:border-gray-700">
+                    <div class="flex items-center justify-between text-sm">
+                        <span class="text-gray-600 dark:text-gray-400">Système Universitaire:</span>
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400">
+                            ✅ 100% Opérationnel
+                        </span>
+                    </div>
+                </div>
+            </x-dashboard.card>
+
+            <!-- Actions rapides Structure Universitaire -->
+            <x-dashboard.card 
+                title="⚡ Actions Rapides - Système Universitaire"
+                subtitle="Raccourcis pour la gestion universitaire"
+            >
+                <div class="grid grid-cols-1 gap-3">
+                    <!-- Créations rapides universitaires -->
+                    <div class="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                        <h5 class="font-medium text-gray-900 dark:text-white mb-2">➕ Créations Rapides</h5>
+                        <div class="grid grid-cols-2 gap-2">
+                            <a href="{{ route('university.ufrs.create') }}" 
+                               class="text-sm px-3 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 text-center">
+                                🏛️ Nouvelle UFR
+                            </a>
+                            <a href="{{ route('university.departments.create') }}" 
+                               class="text-sm px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-center">
+                                🏢 Nouveau Département
+                            </a>
+                            <a href="{{ route('university.programs.create') }}" 
+                               class="text-sm px-3 py-2 bg-green-600 text-white rounded hover:bg-green-700 text-center">
+                                📚 Nouveau Programme
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Gestion universitaire -->
+                    <div class="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                        <h5 class="font-medium text-gray-900 dark:text-white mb-2">📊 Gestion Universitaire</h5>
+                        <div class="space-y-2">
+                            <a href="{{ route('university.dashboard') }}" 
+                               class="flex items-center text-sm text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400">
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                                </svg>
+                                Tableau de Bord
+                            </a>
+                            <a href="{{ route('admin.academic-years.index') }}" 
+                               class="flex items-center text-sm text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400">
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                </svg>
+                                Années Académiques
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </x-dashboard.card>
+        </div>
+        @endif
+
         <!-- MODULE A6 - Supervision & Audits -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div class="lg:col-span-2">

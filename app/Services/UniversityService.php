@@ -432,7 +432,7 @@ class UniversityService
      */
     private function getActiveAcademicYearsCount(School $school): int
     {
-        return \App\Models\AcademicYear::where('status', 'active')->count();
+        return \App\Models\AcademicYear::where('is_active', true)->count();
     }
     
     /**
