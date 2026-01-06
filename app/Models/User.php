@@ -28,6 +28,7 @@ class User extends Authenticatable
         'is_active',
         'last_login_at',
         'last_login_ip',
+        'school_id',
     ];
 
     /**
@@ -125,6 +126,50 @@ class User extends Authenticatable
     public function activityLogs()
     {
         return $this->hasMany(ActivityLog::class);
+    }
+
+    /**
+     * École de rattachement
+     */
+    public function school()
+    {
+        return $this->belongsTo(School::class);
+    }
+
+    /**
+     * Vérifier si l'utilisateur a accès à une école spécifique
+     *
+     * @param School $school
+     * @return bool
+     */
+    public function hasSchoolAccess(School $school): bool
+    {
+        // Pour V1 : l'utilisateur a accès seulement à son école assignée
+        return $this->school_id === $school->id && $this->is_active && $school->is_active;
+    }
+
+    /**
+     * Obtenir l'école de l'utilisateur avec validation
+     *
+     * @return School|null
+     */
+    public function getSchoolContext(): ?School
+    {
+        if (!$this->school || !$this->school->is_active) {
+            return null;
+        }
+
+        return $this->school;
+    }
+
+    /**
+     * Vérifier si l'utilisateur a un contexte école valide
+     *
+     * @return bool
+     */
+    public function hasValidSchoolContext(): bool
+    {
+        return $this->getSchoolContext() !== null;
     }
 
     /**

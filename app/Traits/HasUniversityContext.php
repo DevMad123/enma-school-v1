@@ -70,7 +70,7 @@ trait HasUniversityContext
             'totalDepartments' => $school->departments()->count(), 
             'totalPrograms' => $school->programs()->count(),
             'activePrograms' => $school->programs()->active()->count(),
-            'currentAcademicYear' => \App\Models\AcademicYear::current()->first(),
+            'currentAcademicYear' => \App\Models\AcademicYear::current()?->first(),
             'universityStats' => $this->getBasicUniversityStats($school)
         ];
     }

@@ -124,7 +124,7 @@ class UniversityTeacherController extends Controller
             'last_name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
             'phone' => 'required|string|max:20',
-            'ufr_id' => 'required|exists:ufrs,id',
+            'ufr_id' => 'required|exists:u_f_r_s,id',
             'department_id' => 'required|exists:departments,id',
             'academic_rank' => 'required|string|in:assistant,maitre_assistant,maitre_de_conferences,professeur,professeur_titulaire,charge_cours,vacataire',
             'specialization' => 'required|string|max:255',
@@ -203,7 +203,7 @@ class UniversityTeacherController extends Controller
         // Statistiques de l'enseignant
         $stats = [
             'programs_count' => $teacher->programs()->count(),
-            'active_programs' => $teacher->programs()->where('is_active', true)->count(),
+            'active_programs' => $teacher->programs()->wherePivot('is_active', true)->count(),
             'years_of_service' => $teacher->hire_date ? $teacher->hire_date->diffInYears(now()) : 0,
         ];
 
@@ -255,7 +255,7 @@ class UniversityTeacherController extends Controller
             'last_name' => 'required|string|max:255',
             'email' => ['required', 'email', Rule::unique('users', 'email')->ignore($teacher->user_id)],
             'phone' => 'required|string|max:20',
-            'ufr_id' => 'required|exists:ufrs,id',
+            'ufr_id' => 'required|exists:u_f_r_s,id',
             'department_id' => 'required|exists:departments,id',
             'academic_rank' => 'required|string|in:assistant,maitre_assistant,maitre_de_conferences,professeur,professeur_titulaire,charge_cours,vacataire',
             'specialization' => 'required|string|max:255',

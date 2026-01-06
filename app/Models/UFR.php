@@ -11,6 +11,8 @@ class UFR extends Model
 {
     use HasSchoolContext;
 
+    protected $table = 'u_f_r_s';
+
     protected $fillable = [
         'school_id',
         'name',

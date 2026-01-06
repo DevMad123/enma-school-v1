@@ -4,6 +4,12 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\EnrollmentController;
 use App\Http\Controllers\TeacherAssignmentController;
 use App\Http\Controllers\DashboardController;
+// Dashboard Controllers - Phase 2 Refactoring
+use App\Http\Controllers\Admin\AdminDashboardController;
+use App\Http\Controllers\Staff\StaffDashboardController; 
+use App\Http\Controllers\Teacher\TeacherDashboardController;
+use App\Http\Controllers\Student\UniversityStudentDashboardController;
+use App\Http\Controllers\Student\PreUniversityStudentDashboardController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\RoleController;
@@ -24,6 +30,111 @@ Route::get('/', function () {
 });
 
 Route::get('/dashboard', [DashboardController::class, 'index'])->middleware(['auth', 'verified'])->name('dashboard');
+
+// DEBUG ROUTE - Pour vérifier les rôles utilisateur
+Route::get('/debug-user', function () {
+    $user = \App\Models\User::where('email', 'superadmin@enmaschool.com')->first();
+    
+    if (!$user) {
+        return response()->json(['error' => 'User not found']);
+    }
+    
+    return response()->json([
+        'user' => $user->name,
+        'email' => $user->email,
+        'roles' => $user->getRoleNames()->toArray(),
+        'has_super_admin' => $user->hasRole('super_admin'),
+        'has_any_admin_role' => $user->hasAnyRole(['super_admin', 'admin', 'directeur']),
+        'user_id' => $user->id,
+        'permissions_count' => $user->getAllPermissions()->count(),
+    ]);
+})->middleware(['auth', 'verified']);
+
+// ===================================================================
+// DASHBOARD REFACTORED ROUTES - Phase 2 Architecture
+// ===================================================================
+
+// Dashboard principal et redirections intelligentes
+Route::middleware(['auth', 'verified', 'school.context'])->prefix('dashboard')->name('dashboard.')->group(function () {
+    // Route de redirection automatique vers le dashboard approprié
+    Route::get('/redirect', [DashboardController::class, 'redirect'])->name('redirect');
+    
+    // Dashboard par défaut pour utilisateurs sans dashboard spécifique
+    Route::get('/default', [DashboardController::class, 'defaultDashboard'])->name('default');
+    
+    // API pour obtenir les informations du dashboard courant
+    Route::get('/current-info', [DashboardController::class, 'currentDashboardInfo'])->name('current.info');
+});
+
+// Dashboard Administration (super_admin, admin, directeur)
+Route::middleware(['auth', 'verified', 'dashboard.access:admin'])->prefix('admin/dashboard')->name('admin.dashboard.')->group(function () {
+    Route::get('/', [AdminDashboardController::class, 'index'])->name('index');
+    Route::get('/governance', [AdminDashboardController::class, 'governance'])->name('governance');
+    Route::get('/supervision', [AdminDashboardController::class, 'supervision'])->name('supervision');
+    Route::get('/statistics', [AdminDashboardController::class, 'statistics'])->name('statistics');
+    Route::get('/quick-actions', [AdminDashboardController::class, 'quickActions'])->name('quick-actions');
+    
+    // API Routes pour données dynamiques
+    Route::get('/api/stats', [AdminDashboardController::class, 'getStats'])->name('api.stats');
+    Route::get('/api/activities', [AdminDashboardController::class, 'getRecentActivities'])->name('api.activities');
+});
+
+// Dashboard Personnel (staff, accountant, supervisor)
+Route::middleware(['auth', 'verified', 'dashboard.access:staff'])->prefix('staff/dashboard')->name('staff.dashboard.')->group(function () {
+    Route::get('/', [StaffDashboardController::class, 'index'])->name('index');
+    Route::get('/financial', [StaffDashboardController::class, 'financial'])->name('financial');
+    Route::get('/supervision', [StaffDashboardController::class, 'supervision'])->name('supervision');
+    Route::get('/operations', [StaffDashboardController::class, 'operations'])->name('operations');
+    
+    // API Routes
+    Route::get('/api/financial-data', [StaffDashboardController::class, 'getFinancialData'])->name('api.financial');
+    Route::get('/api/operations-data', [StaffDashboardController::class, 'getOperationsData'])->name('api.operations');
+});
+
+// Dashboard Enseignant (teacher)
+Route::middleware(['auth', 'verified', 'dashboard.access:teacher'])->prefix('teacher/dashboard')->name('teacher.dashboard.')->group(function () {
+    Route::get('/', [TeacherDashboardController::class, 'index'])->name('index');
+    Route::get('/schedule', [TeacherDashboardController::class, 'schedule'])->name('schedule');
+    Route::get('/evaluations', [TeacherDashboardController::class, 'evaluations'])->name('evaluations');
+    Route::get('/classes', [TeacherDashboardController::class, 'classes'])->name('classes');
+    Route::get('/pedagogical', [TeacherDashboardController::class, 'pedagogical'])->name('pedagogical');
+    
+    // API Routes
+    Route::get('/api/schedule-data', [TeacherDashboardController::class, 'getScheduleData'])->name('api.schedule');
+    Route::get('/api/classes-data', [TeacherDashboardController::class, 'getClassesData'])->name('api.classes');
+});
+
+// Dashboard Étudiant Universitaire
+Route::middleware(['auth', 'verified', 'dashboard.access:university_student', 'university'])->prefix('student/university/dashboard')->name('student.university.dashboard.')->group(function () {
+    Route::get('/', [UniversityStudentDashboardController::class, 'index'])->name('index');
+    Route::get('/academic-path', [UniversityStudentDashboardController::class, 'academicPath'])->name('academic-path');
+    Route::get('/grades', [UniversityStudentDashboardController::class, 'grades'])->name('grades');
+    Route::get('/enrollment', [UniversityStudentDashboardController::class, 'enrollment'])->name('enrollment');
+    Route::get('/documents', [UniversityStudentDashboardController::class, 'documents'])->name('documents');
+    Route::get('/calendar', [UniversityStudentDashboardController::class, 'calendar'])->name('calendar');
+    
+    // API Routes
+    Route::get('/api/ue-progress', [UniversityStudentDashboardController::class, 'getUEProgress'])->name('api.ue-progress');
+    Route::get('/api/semester-data', [UniversityStudentDashboardController::class, 'getSemesterData'])->name('api.semester-data');
+});
+
+// Dashboard Étudiant Préuniversitaire
+Route::middleware(['auth', 'verified', 'dashboard.access:preuniversity_student', 'pre_university'])->prefix('student/preuniversity/dashboard')->name('student.preuniversity.dashboard.')->group(function () {
+    Route::get('/', [PreUniversityStudentDashboardController::class, 'index'])->name('index');
+    Route::get('/bulletin', [PreUniversityStudentDashboardController::class, 'bulletin'])->name('bulletin');
+    Route::get('/subjects', [PreUniversityStudentDashboardController::class, 'subjects'])->name('subjects');
+    Route::get('/school-life', [PreUniversityStudentDashboardController::class, 'schoolLife'])->name('school-life');
+    Route::get('/parent-communication', [PreUniversityStudentDashboardController::class, 'parentCommunication'])->name('parent-communication');
+    Route::get('/homework', [PreUniversityStudentDashboardController::class, 'homework'])->name('homework');
+    
+    // API Routes
+    Route::get('/api/grades-data', [PreUniversityStudentDashboardController::class, 'getGradesData'])->name('api.grades-data');
+    Route::get('/api/bulletin-data', [PreUniversityStudentDashboardController::class, 'getBulletinData'])->name('api.bulletin-data');
+});
+
+// ===================================================================
+// FIN DES ROUTES DASHBOARD REFACTORISÉES
+// ===================================================================
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

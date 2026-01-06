@@ -17,16 +17,18 @@ return Application::configure(basePath: dirname(__DIR__))
             'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
             'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
             'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
-            'school.exists' => \App\Http\Middleware\EnsureSchoolExists::class,
+            'school.context' => \App\Http\Middleware\SchoolContextMiddleware::class, // ✅ Nouveau middleware central
+            'dashboard.access' => \App\Http\Middleware\DashboardAccessMiddleware::class, // ✅ Dashboard access control
             'admin.access' => \App\Http\Middleware\AdminAccess::class,
-            'university' => \App\Http\Middleware\UniversityMiddleware::class,
-            'pre_university' => \App\Http\Middleware\PreUniversityMiddleware::class,
+            'university' => \App\Http\Middleware\UniversityContextMiddleware::class, // ✅ Contexte universitaire
+            'pre_university' => \App\Http\Middleware\PreUniversityContextMiddleware::class, // ✅ Contexte préuniversitaire
             'rate.limit.custom' => \App\Http\Middleware\CustomRateLimit::class,
         ]);
         
-        // Appliquer le middleware school.exists à toutes les routes web authentifiées
+        // Appliquer le middleware school.context à toutes les routes web authentifiées
+        // Note : L'ordre est important - auth PUIS school.context
         $middleware->web([
-            \App\Http\Middleware\EnsureSchoolExists::class,
+            'school.context', // ✅ Remplace EnsureSchoolExists
         ]);
         
         // Groupes de middleware pour la sécurité

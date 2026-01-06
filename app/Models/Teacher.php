@@ -73,7 +73,7 @@ class Teacher extends Model
     public function programs()
     {
         return $this->belongsToMany(Program::class, 'teacher_program_assignments')
-                    ->withPivot(['semester_id', 'course_unit_id', 'weekly_hours', 'is_active'])
+                    ->withPivot(['semester_id', 'course_unit_id', 'weekly_hours', 'is_active', 'assignment_type', 'start_date', 'end_date', 'notes'])
                     ->withTimestamps();
     }
 

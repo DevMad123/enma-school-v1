@@ -71,7 +71,17 @@ class FinanceController extends BaseController
             $context = $this->getSchoolContext();
             $dashboardData = $this->financeService->getDashboardStatistics();
             
-            return view('finance.index', array_merge($dashboardData, $context));
+            // Map service data to view variable names
+            $viewData = [
+                'totalFeesAmount' => $dashboardData['total_fees_amount'] ?? 0,
+                'totalPayments' => $dashboardData['total_payments'] ?? 0,
+                'pendingPayments' => $dashboardData['pending_payments'] ?? 0,
+                'recentPayments' => $dashboardData['recent_payments'] ?? collect(),
+                'collectionRate' => $dashboardData['collection_rate'] ?? 0,
+                'currentAcademicYear' => $dashboardData['current_academic_year'] ?? null,
+            ];
+            
+            return view('finance.index', array_merge($viewData, $context));
             
         } catch (\Exception $e) {
             return $this->handleContextualError(

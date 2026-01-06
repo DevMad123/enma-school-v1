@@ -167,9 +167,43 @@ class School extends Model
     }
 
     /**
-     * Obtenir l'école active (il n'y en a qu'une pour l'instant)
+     * Relation avec les utilisateurs rattachés
      */
-    public static function getActiveSchool()
+    public function users()
+    {
+        return $this->hasMany(User::class);
+    }
+
+    /**
+     * Obtenir l'école pour un utilisateur spécifique
+     *
+     * @param User $user
+     * @return School|null
+     */
+    public static function getForUser(User $user): ?School
+    {
+        return $user->school;
+    }
+
+    /**
+     * Obtenir l'école dans le contexte courant
+     * Utilise l'injection de dépendance Laravel
+     *
+     * @return School|null
+     */
+    public static function getCurrentContext(): ?School
+    {
+        return app('current_school', null);
+    }
+
+    /**
+     * Obtenir une école active par défaut (pour les transitions)
+     * ⚠️ Méthode de transition - à utiliser uniquement pour la migration
+     *
+     * @deprecated Utiliser getForUser() ou getCurrentContext() à la place
+     * @return School|null
+     */
+    public static function getDefaultActiveSchool(): ?School
     {
         return static::active()->first();
     }

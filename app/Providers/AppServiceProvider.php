@@ -14,7 +14,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // Enregistrement du service de contexte école en singleton
+        $this->app->singleton(\App\Services\SchoolContextService::class);
     }
 
     /**

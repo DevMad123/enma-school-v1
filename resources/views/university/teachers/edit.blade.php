@@ -1,310 +1,382 @@
-@extends('layouts.university')
+@extends('layouts.dashboard')
 
-@section('title', 'Modifier l\'enseignant')
+@section('title', 'Modifier l\'enseignant universitaire')
 
 @section('content')
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                    <h3 class="card-title">
-                        <i class="fas fa-user-edit mr-2"></i>
-                        Modifier l'enseignant: {{ $teacher->first_name }} {{ $teacher->last_name }}
-                    </h3>
-                    <div class="card-tools">
-                        <a href="{{ route('university.teachers.show', $teacher) }}" class="btn btn-info btn-sm">
-                            <i class="fas fa-eye"></i> Voir
-                        </a>
-                        <a href="{{ route('university.teachers.index') }}" class="btn btn-default btn-sm">
-                            <i class="fas fa-arrow-left"></i> Retour
-                        </a>
-                    </div>
-                </div>
-                
-                <form action="{{ route('university.teachers.update', $teacher) }}" method="POST">
-                    @csrf
-                    @method('PUT')
-                    <div class="card-body">
-                        <div class="row">
-                            <!-- Informations personnelles -->
-                            <div class="col-md-6">
-                                <h4 class="text-primary">
-                                    <i class="fas fa-user mr-2"></i>
-                                    Informations personnelles
-                                </h4>
-                                
-                                <div class="form-group">
-                                    <label for="first_name">Prénom <span class="text-danger">*</span></label>
-                                    <input type="text" 
-                                           name="first_name" 
-                                           id="first_name" 
-                                           class="form-control @error('first_name') is-invalid @enderror"
-                                           value="{{ old('first_name', $teacher->first_name) }}" 
-                                           required>
-                                    @error('first_name')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-
-                                <div class="form-group">
-                                    <label for="last_name">Nom <span class="text-danger">*</span></label>
-                                    <input type="text" 
-                                           name="last_name" 
-                                           id="last_name" 
-                                           class="form-control @error('last_name') is-invalid @enderror"
-                                           value="{{ old('last_name', $teacher->last_name) }}" 
-                                           required>
-                                    @error('last_name')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-
-                                <div class="form-group">
-                                    <label for="email">Email <span class="text-danger">*</span></label>
-                                    <input type="email" 
-                                           name="email" 
-                                           id="email" 
-                                           class="form-control @error('email') is-invalid @enderror"
-                                           value="{{ old('email', $teacher->user->email) }}" 
-                                           required>
-                                    @error('email')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-
-                                <div class="form-group">
-                                    <label for="phone">Téléphone</label>
-                                    <input type="text" 
-                                           name="phone" 
-                                           id="phone" 
-                                           class="form-control @error('phone') is-invalid @enderror"
-                                           value="{{ old('phone', $teacher->phone) }}">
-                                    @error('phone')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-                            </div>
-
-                            <!-- Informations académiques -->
-                            <div class="col-md-6">
-                                <h4 class="text-primary">
-                                    <i class="fas fa-university mr-2"></i>
-                                    Informations académiques
-                                </h4>
-
-                                <div class="form-group">
-                                    <label for="ufr_id">UFR <span class="text-danger">*</span></label>
-                                    <select name="ufr_id" 
-                                            id="ufr_id" 
-                                            class="form-control @error('ufr_id') is-invalid @enderror" 
-                                            required>
-                                        <option value="">-- Sélectionner une UFR --</option>
-                                        @foreach($ufrs as $ufr)
-                                            <option value="{{ $ufr->id }}" {{ old('ufr_id', $teacher->ufr_id) == $ufr->id ? 'selected' : '' }}>
-                                                {{ $ufr->name }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                    @error('ufr_id')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-
-                                <div class="form-group">
-                                    <label for="department_id">Département</label>
-                                    <select name="department_id" 
-                                            id="department_id" 
-                                            class="form-control @error('department_id') is-invalid @enderror">
-                                        <option value="">-- Sélectionner un département --</option>
-                                        @foreach($departments as $department)
-                                            <option value="{{ $department->id }}" 
-                                                    data-ufr="{{ $department->ufr_id }}"
-                                                    {{ old('department_id', $teacher->department_id) == $department->id ? 'selected' : '' }}>
-                                                {{ $department->name }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                    @error('department_id')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-
-                                <div class="form-group">
-                                    <label for="academic_rank">Rang académique</label>
-                                    <select name="academic_rank" 
-                                            id="academic_rank" 
-                                            class="form-control @error('academic_rank') is-invalid @enderror">
-                                        <option value="">-- Sélectionner un rang --</option>
-                                        <option value="assistant" {{ old('academic_rank', $teacher->academic_rank) == 'assistant' ? 'selected' : '' }}>
-                                            Assistant
-                                        </option>
-                                        <option value="maitre_assistant" {{ old('academic_rank', $teacher->academic_rank) == 'maitre_assistant' ? 'selected' : '' }}>
-                                            Maître Assistant
-                                        </option>
-                                        <option value="maitre_de_conferences" {{ old('academic_rank', $teacher->academic_rank) == 'maitre_de_conferences' ? 'selected' : '' }}>
-                                            Maître de Conférences
-                                        </option>
-                                        <option value="professeur" {{ old('academic_rank', $teacher->academic_rank) == 'professeur' ? 'selected' : '' }}>
-                                            Professeur
-                                        </option>
-                                        <option value="professeur_titulaire" {{ old('academic_rank', $teacher->academic_rank) == 'professeur_titulaire' ? 'selected' : '' }}>
-                                            Professeur Titulaire
-                                        </option>
-                                    </select>
-                                    @error('academic_rank')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-
-                                <div class="form-group">
-                                    <label for="specialization">Spécialisation</label>
-                                    <input type="text" 
-                                           name="specialization" 
-                                           id="specialization" 
-                                           class="form-control @error('specialization') is-invalid @enderror"
-                                           value="{{ old('specialization', $teacher->specialization) }}">
-                                    @error('specialization')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-                            </div>
-                        </div>
-
-                        <hr>
-
-                        <!-- Informations professionnelles -->
-                        <div class="row">
-                            <div class="col-md-6">
-                                <h4 class="text-primary">
-                                    <i class="fas fa-briefcase mr-2"></i>
-                                    Informations professionnelles
-                                </h4>
-
-                                <div class="form-group">
-                                    <label for="employee_id">Numéro d'employé</label>
-                                    <input type="text" 
-                                           name="employee_id" 
-                                           id="employee_id" 
-                                           class="form-control @error('employee_id') is-invalid @enderror"
-                                           value="{{ old('employee_id', $teacher->employee_id) }}">
-                                    @error('employee_id')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-
-                                <div class="form-group">
-                                    <label for="hire_date">Date d'embauche</label>
-                                    <input type="date" 
-                                           name="hire_date" 
-                                           id="hire_date" 
-                                           class="form-control @error('hire_date') is-invalid @enderror"
-                                           value="{{ old('hire_date', $teacher->hire_date ? $teacher->hire_date->format('Y-m-d') : '') }}">
-                                    @error('hire_date')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-
-                                <div class="form-group">
-                                    <label for="office_location">Bureau</label>
-                                    <input type="text" 
-                                           name="office_location" 
-                                           id="office_location" 
-                                           class="form-control @error('office_location') is-invalid @enderror"
-                                           value="{{ old('office_location', $teacher->office_location) }}">
-                                    @error('office_location')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-
-                                <div class="form-group">
-                                    <label for="salary">Salaire</label>
-                                    <div class="input-group">
-                                        <input type="number" 
-                                               name="salary" 
-                                               id="salary" 
-                                               class="form-control @error('salary') is-invalid @enderror"
-                                               value="{{ old('salary', $teacher->salary) }}" 
-                                               step="0.01">
-                                        <div class="input-group-append">
-                                            <span class="input-group-text">FCFA</span>
-                                        </div>
-                                    </div>
-                                    @error('salary')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-                            </div>
-
-                            <div class="col-md-6">
-                                <h4 class="text-primary">
-                                    <i class="fas fa-cog mr-2"></i>
-                                    Informations complémentaires
-                                </h4>
-
-                                <div class="form-group">
-                                    <label for="research_interests">Intérêts de recherche</label>
-                                    <textarea name="research_interests" 
-                                              id="research_interests" 
-                                              class="form-control @error('research_interests') is-invalid @enderror"
-                                              rows="4">{{ old('research_interests', $teacher->research_interests) }}</textarea>
-                                    @error('research_interests')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-
-                                <div class="form-group">
-                                    <label for="qualifications">Qualifications</label>
-                                    <textarea name="qualifications" 
-                                              id="qualifications" 
-                                              class="form-control @error('qualifications') is-invalid @enderror"
-                                              rows="4">{{ old('qualifications', $teacher->qualifications) }}</textarea>
-                                    @error('qualifications')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-
-                                <div class="form-group">
-                                    <label for="status">Statut</label>
-                                    <select name="status" 
-                                            id="status" 
-                                            class="form-control @error('status') is-invalid @enderror">
-                                        <option value="active" {{ old('status', $teacher->status) == 'active' ? 'selected' : '' }}>
-                                            Actif
-                                        </option>
-                                        <option value="inactive" {{ old('status', $teacher->status) == 'inactive' ? 'selected' : '' }}>
-                                            Inactif
-                                        </option>
-                                        <option value="retired" {{ old('status', $teacher->status) == 'retired' ? 'selected' : '' }}>
-                                            Retraité
-                                        </option>
-                                    </select>
-                                    @error('status')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="card-footer">
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-save mr-2"></i>
-                            Mettre à jour
-                        </button>
-                        <a href="{{ route('university.teachers.show', $teacher) }}" class="btn btn-info ml-2">
-                            <i class="fas fa-eye mr-2"></i>
-                            Voir
-                        </a>
-                        <a href="{{ route('university.teachers.index') }}" class="btn btn-secondary ml-2">
-                            <i class="fas fa-times mr-2"></i>
-                            Annuler
-                        </a>
-                    </div>
-                </form>
+<!-- Page Header -->
+<div class="bg-white dark:bg-gray-800 shadow mb-6">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center py-6">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-900 dark:text-white flex items-center">
+                    <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                    </svg>
+                    Modifier l'enseignant: {{ $teacher->first_name }} {{ $teacher->last_name }}
+                </h1>
+                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Mettre à jour les informations de l'enseignant universitaire</p>
+            </div>
+            <div class="flex space-x-3">
+                <a href="{{ route('university.teachers.show', $teacher) }}" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg font-medium transition duration-150 inline-flex items-center">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                    </svg>
+                    Voir
+                </a>
+                <a href="{{ route('university.teachers.index') }}" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg font-medium transition duration-150 inline-flex items-center">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                    </svg>
+                    Retour
+                </a>
             </div>
         </div>
     </div>
+</div>
+
+<div class="mx-auto">
+    <form action="{{ route('university.teachers.update', $teacher) }}" method="POST" class="bg-white dark:bg-gray-800 shadow rounded-lg">
+        @csrf
+        @method('PUT')
+        <div class="p-6">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- Informations personnelles -->
+                <div>
+                    <h3 class="text-lg font-medium text-blue-600 dark:text-blue-400 flex items-center mb-4">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                        </svg>
+                        Informations personnelles
+                    </h3>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <label for="first_name" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                Prénom <span class="text-red-500">*</span>
+                            </label>
+                            <input type="text" 
+                                   name="first_name" 
+                                   id="first_name" 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white @error('first_name') border-red-500 @enderror"
+                                   value="{{ old('first_name', $teacher->first_name) }}" 
+                                   required>
+                            @error('first_name')
+                                <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <div>
+                            <label for="last_name" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                Nom <span class="text-red-500">*</span>
+                            </label>
+                            <input type="text" 
+                                   name="last_name" 
+                                   id="last_name" 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white @error('last_name') border-red-500 @enderror"
+                                   value="{{ old('last_name', $teacher->last_name) }}" 
+                                   required>
+                            @error('last_name')
+                                <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <div>
+                            <label for="email" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                Email <span class="text-red-500">*</span>
+                            </label>
+                            <input type="email" 
+                                   name="email" 
+                                   id="email" 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white @error('email') border-red-500 @enderror"
+                                   value="{{ old('email', $teacher->user->email) }}" 
+                                   required>
+                            @error('email')
+                                <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <div>
+                            <label for="phone" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                Téléphone
+                            </label>
+                            <input type="text" 
+                                   name="phone" 
+                                   id="phone" 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white @error('phone') border-red-500 @enderror"
+                                   value="{{ old('phone', $teacher->phone) }}">
+                            @error('phone')
+                                <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                            @enderror
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Informations académiques -->
+                <div>
+                    <h3 class="text-lg font-medium text-blue-600 dark:text-blue-400 flex items-center mb-4">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                        </svg>
+                        Informations académiques
+                    </h3>
+
+                    <div class="space-y-4">
+                        <div>
+                            <label for="ufr_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                UFR <span class="text-red-500">*</span>
+                            </label>
+                            <select name="ufr_id" 
+                                    id="ufr_id" 
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white @error('ufr_id') border-red-500 @enderror" 
+                                    required>
+                                <option value="">-- Sélectionner une UFR --</option>
+                                @foreach($ufrs as $ufr)
+                                    <option value="{{ $ufr->id }}" {{ old('ufr_id', $teacher->ufr_id) == $ufr->id ? 'selected' : '' }}>
+                                        {{ $ufr->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            @error('ufr_id')
+                                <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <div>
+                            <label for="department_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                Département
+                            </label>
+                            <select name="department_id" 
+                                    id="department_id" 
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white @error('department_id') border-red-500 @enderror">
+                                <option value="">-- Sélectionner un département --</option>
+                                @foreach($departments as $department)
+                                    <option value="{{ $department->id }}" 
+                                            data-ufr="{{ $department->ufr_id }}"
+                                            {{ old('department_id', $teacher->department_id) == $department->id ? 'selected' : '' }}>
+                                        {{ $department->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            @error('department_id')
+                                <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <div>
+                            <label for="academic_rank" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                Rang académique
+                            </label>
+                            <select name="academic_rank" 
+                                    id="academic_rank" 
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white @error('academic_rank') border-red-500 @enderror">
+                                <option value="">-- Sélectionner un rang --</option>
+                                <option value="assistant" {{ old('academic_rank', $teacher->academic_rank) == 'assistant' ? 'selected' : '' }}>
+                                    Assistant
+                                </option>
+                                <option value="maitre_assistant" {{ old('academic_rank', $teacher->academic_rank) == 'maitre_assistant' ? 'selected' : '' }}>
+                                    Maître Assistant
+                                </option>
+                                <option value="maitre_de_conferences" {{ old('academic_rank', $teacher->academic_rank) == 'maitre_de_conferences' ? 'selected' : '' }}>
+                                    Maître de Conférences
+                                </option>
+                                <option value="professeur" {{ old('academic_rank', $teacher->academic_rank) == 'professeur' ? 'selected' : '' }}>
+                                    Professeur
+                                </option>
+                                <option value="professeur_titulaire" {{ old('academic_rank', $teacher->academic_rank) == 'professeur_titulaire' ? 'selected' : '' }}>
+                                    Professeur Titulaire
+                                </option>
+                            </select>
+                            @error('academic_rank')
+                                <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <div>
+                            <label for="specialization" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                Spécialisation
+                            </label>
+                            <input type="text" 
+                                   name="specialization" 
+                                   id="specialization" 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white @error('specialization') border-red-500 @enderror"
+                                   value="{{ old('specialization', $teacher->specialization) }}">
+                            @error('specialization')
+                                <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                            @enderror
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Separator -->
+            <div class="border-t border-gray-200 dark:border-gray-600 my-6"></div>
+
+            <!-- Professional and Additional Information -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- Informations professionnelles -->
+                <div>
+                    <h3 class="text-lg font-medium text-blue-600 dark:text-blue-400 flex items-center mb-4">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2-2v2m8 0V6a2 2 0 012 2v6M8 8v10a2 2 0 002 2h4a2 2 0 002-2V8M8 8V6a2 2 0 012-2h4a2 2 0 012 2v2M8 8h8"></path>
+                        </svg>
+                        Informations professionnelles
+                    </h3>
+
+                    <div class="space-y-4">
+                        <div>
+                            <label for="employee_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                Numéro d'employé
+                            </label>
+                            <input type="text" 
+                                   name="employee_id" 
+                                   id="employee_id" 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white @error('employee_id') border-red-500 @enderror"
+                                   value="{{ old('employee_id', $teacher->employee_id) }}">
+                            @error('employee_id')
+                                <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <div>
+                            <label for="hire_date" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                Date d'embauche
+                            </label>
+                            <input type="date" 
+                                   name="hire_date" 
+                                   id="hire_date" 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white @error('hire_date') border-red-500 @enderror"
+                                   value="{{ old('hire_date', $teacher->hire_date ? $teacher->hire_date->format('Y-m-d') : '') }}">
+                            @error('hire_date')
+                                <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <div>
+                            <label for="office_location" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                Bureau
+                            </label>
+                            <input type="text" 
+                                   name="office_location" 
+                                   id="office_location" 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white @error('office_location') border-red-500 @enderror"
+                                   value="{{ old('office_location', $teacher->office_location) }}">
+                            @error('office_location')
+                                <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <div>
+                            <label for="salary" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                Salaire
+                            </label>
+                            <div class="relative">
+                                <input type="number" 
+                                       name="salary" 
+                                       id="salary" 
+                                       class="w-full px-3 py-2 pr-16 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white @error('salary') border-red-500 @enderror"
+                                       value="{{ old('salary', $teacher->salary) }}" 
+                                       step="0.01">
+                                <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                                    <span class="text-gray-500 text-sm">FCFA</span>
+                                </div>
+                            </div>
+                            @error('salary')
+                                <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                            @enderror
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Informations complémentaires -->
+                <div>
+                    <h3 class="text-lg font-medium text-blue-600 dark:text-blue-400 flex items-center mb-4">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                        </svg>
+                        Informations complémentaires
+                    </h3>
+
+                    <div class="space-y-4">
+                        <div>
+                            <label for="research_interests" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                Intérêts de recherche
+                            </label>
+                            <textarea name="research_interests" 
+                                      id="research_interests" 
+                                      rows="4"
+                                      class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white @error('research_interests') border-red-500 @enderror">{{ old('research_interests', $teacher->research_interests) }}</textarea>
+                            @error('research_interests')
+                                <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <div>
+                            <label for="qualifications" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                Qualifications
+                            </label>
+                            <textarea name="qualifications" 
+                                      id="qualifications" 
+                                      rows="4"
+                                      class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white @error('qualifications') border-red-500 @enderror">{{ old('qualifications', $teacher->qualifications) }}</textarea>
+                            @error('qualifications')
+                                <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <div>
+                            <label for="status" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                Statut
+                            </label>
+                            <select name="status" 
+                                    id="status" 
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white @error('status') border-red-500 @enderror">
+                                <option value="active" {{ old('status', $teacher->status) == 'active' ? 'selected' : '' }}>
+                                    Actif
+                                </option>
+                                <option value="inactive" {{ old('status', $teacher->status) == 'inactive' ? 'selected' : '' }}>
+                                    Inactif
+                                </option>
+                                <option value="retired" {{ old('status', $teacher->status) == 'retired' ? 'selected' : '' }}>
+                                    Retraité
+                                </option>
+                            </select>
+                            @error('status')
+                                <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                            @enderror
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-gray-50 dark:bg-gray-700 px-6 py-3 flex justify-between border-t border-gray-200 dark:border-gray-600">
+            <div class="flex space-x-3">
+                <a href="{{ route('university.teachers.show', $teacher) }}" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg font-medium transition duration-150 inline-flex items-center">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                    </svg>
+                    Voir
+                </a>
+                <a href="{{ route('university.teachers.index') }}" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg font-medium transition duration-150 inline-flex items-center">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                    Annuler
+                </a>
+            </div>
+            <div>
+                <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition duration-150 inline-flex items-center">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
+                    </svg>
+                    Mettre à jour
+                </button>
+            </div>
+        </div>
+    </form>
 </div>
 
 @push('scripts')

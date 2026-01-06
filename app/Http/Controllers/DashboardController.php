@@ -2,325 +2,261 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\User;
-use App\Models\Student;
-use App\Models\Teacher;
-use App\Models\SchoolClass;
-use App\Models\Payment;
-use App\Models\SchoolFee;
-use App\Models\AcademicYear;
-use App\Models\TeacherAssignment;
-use App\Models\UserLog;
-use App\Models\ActivityLog;
-use App\Models\Grade;
-use App\Models\Evaluation;
 use App\Traits\HasSchoolContext;
+use App\Services\SchoolContextService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Carbon\Carbon;
 
+/**
+ * Contrôleur de routage intelligent des dashboards
+ * 
+ * Ce contrôleur sert de point d'entrée unique et redirige automatiquement
+ * vers le dashboard approprié selon le rôle et le contexte de l'utilisateur.
+ * 
+ * @package App\Http\Controllers
+ * @author EnmaSchool Core Team
+ * @version 2.0 - Refactoring complet
+ * @since 2026-01-06
+ */
 class DashboardController extends Controller
 {
-    /**
-     * Dashboard principal avec redirection selon le rôle
-     */
-    
     use HasSchoolContext;
-    
-    public function index()
+
+    /**
+     * Constructeur
+     */
+    public function __construct()
+    {
+        $this->middleware(['auth', 'school.context']);
+    }
+
+    /**
+     * Point d'entrée principal - Routage intelligent vers le dashboard approprié
+     * 
+     * @param Request $request
+     * @return \Illuminate\Http\RedirectResponse|\Illuminate\View\View
+     */
+    public function index(Request $request)
     {
         $user = Auth::user();
-        
-        if ($user->hasRole('admin') || $user->isStaff()) {
-            return $this->adminDashboard();
-        } elseif ($user->isTeacher()) {
-            return $this->teacherDashboard();
-        } elseif ($user->isStudent()) {
-            return $this->studentDashboard();
+
+        // Vérifier le contexte école
+        $redirectResponse = $this->ensureSchoolExists();
+        if ($redirectResponse) {
+            return $redirectResponse;
         }
-        
-        // Dashboard par défaut si aucun rôle spécifique
+
+        // Routage intelligent selon le rôle et le contexte
+        $dashboardRoute = $this->determineDashboardRoute($user);
+
+        if ($dashboardRoute) {
+            return redirect()->route($dashboardRoute);
+        }
+
+        // Fallback vers le dashboard par défaut
         return $this->defaultDashboard();
     }
 
     /**
-     * Dashboard Administrateur
+     * Dashboard par défaut pour les utilisateurs sans dashboard spécifique
+     * 
+     * @return \Illuminate\View\View
      */
-    public function adminDashboard()
+    public function defaultDashboard()
     {
-        // Statistiques globales
-        $totalStudents = Student::count();
-        $totalTeachers = Teacher::count();
-        $totalClasses = SchoolClass::count();
-        $totalUsers = User::count();
+        $user = Auth::user();
+        $contextData = $this->getSchoolContextData();
 
-        // Statistiques financières
-        $currentYear = AcademicYear::current();
-        $totalRevenue = Payment::where('status', 'confirmed')->sum('amount');
-        $monthlyRevenue = Payment::where('status', 'confirmed')
-            ->whereMonth('created_at', Carbon::now()->month)
-            ->sum('amount');
-        
-        $pendingPayments = Payment::where('status', 'pending')->count();
-        $overduePayments = SchoolFee::where('due_date', '<', Carbon::now())
-            ->where('status', 'active')
-            ->count();
-
-        // Derniers paiements
-        $recentPayments = Payment::with(['student.user', 'schoolFee'])
-            ->where('status', 'confirmed')
-            ->orderBy('created_at', 'desc')
-            ->limit(10)
-            ->get();
-
-        // Évolution des inscriptions sur 6 mois
-        $enrollmentTrend = collect();
-        for ($i = 5; $i >= 0; $i--) {
-            $month = Carbon::now()->subMonths($i);
-            $count = Student::whereMonth('created_at', $month->month)
-                ->whereYear('created_at', $month->year)
-                ->count();
-            
-            $enrollmentTrend->push([
-                'month' => $month->format('M'),
-                'count' => $count
-            ]);
-        }
-
-        // Actions rapides - dernières activités
-        $recentActivities = [
-            'new_students' => Student::whereDate('created_at', '>=', Carbon::now()->subDays(7))->count(),
-            'new_teachers' => Teacher::whereDate('created_at', '>=', Carbon::now()->subDays(7))->count(),
-            'total_assignments' => TeacherAssignment::count(), // Total des affectations au lieu de pending
-        ];
-
-        // Statistiques de supervision pour le Module A6
-        $supervisionStats = [
-            'today_logins' => UserLog::byAction('logged_in')->today()->count(),
-            'week_unique_users' => UserLog::byAction('logged_in')->thisWeek()->distinct('user_id')->count(),
-            'monthly_activities' => ActivityLog::thisMonth()->count(),
-            'active_teachers' => UserLog::byAction('logged_in')
-                ->thisWeek()
-                ->whereHas('user', function($q) {
-                    $q->whereHas('teacher');
-                })
-                ->distinct('user_id')
-                ->count(),
-            'active_students' => UserLog::byAction('logged_in')
-                ->thisWeek()
-                ->whereHas('user', function($q) {
-                    $q->whereHas('student');
-                })
-                ->distinct('user_id')
-                ->count(),
-        ];
-
-        // Activités récentes pour le Module A6
-        $recentSystemActivities = ActivityLog::with('user')
-            ->latest()
-            ->limit(5)
-            ->get();
-
-        return view('dashboards.admin', compact(
-            'totalStudents', 'totalTeachers', 'totalClasses', 'totalUsers',
-            'totalRevenue', 'monthlyRevenue', 'pendingPayments', 'overduePayments',
-            'recentPayments', 'enrollmentTrend', 'recentActivities',
-            'supervisionStats', 'recentSystemActivities'
-        ));
+        return view('dashboards.default', array_merge([
+            'user' => $user,
+            'message' => 'Bienvenue dans EnmaSchool. Votre profil est en cours de configuration.',
+            'available_actions' => $this->getAvailableActions($user),
+        ], $contextData));
     }
 
     /**
-     * Dashboard Enseignant
+     * API pour obtenir les informations du dashboard courant
+     * 
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
      */
-    public function teacherDashboard()
+    public function currentDashboardInfo(Request $request)
     {
         $user = Auth::user();
-        $teacher = $user->teacher;
+        $school = $this->getCurrentSchool();
 
-        if (!$teacher) {
-            return redirect()->route('dashboard')->with('error', 'Profil enseignant non trouvé.');
+        return response()->json([
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'roles' => $user->getRoleNames(),
+                'profile_type' => $this->getUserProfileType($user),
+            ],
+            'school' => [
+                'id' => $school?->id,
+                'name' => $school?->name,
+                'type' => $school?->type,
+            ],
+            'dashboard' => [
+                'type' => $this->getCurrentDashboardType($user),
+                'route' => $this->determineDashboardRoute($user),
+            ],
+            'context' => $this->getSchoolContextData(),
+        ]);
+    }
+
+    /**
+     * Redirection forcée vers le dashboard approprié
+     * 
+     * @param Request $request
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function redirect(Request $request)
+    {
+        $user = Auth::user();
+        $dashboardRoute = $this->determineDashboardRoute($user);
+
+        if ($dashboardRoute) {
+            return redirect()->route($dashboardRoute)->with('info', 'Redirection vers votre espace de travail.');
         }
 
-        // Classes assignées
-        $assignments = TeacherAssignment::with(['schoolClass.level', 'subject'])
-            ->where('teacher_id', $teacher->id)
-            ->get(); // Suppression du where status car la colonne n'existe pas
+        return redirect()->route('dashboard.default')->with('warning', 'Profil non configuré. Contactez votre administrateur.');
+    }
 
-        $totalClasses = $assignments->count();
-        $totalStudents = $assignments->sum(function ($assignment) {
-            return $assignment->schoolClass->students()->count();
-        });
+    /**
+     * Déterminer la route de dashboard appropriée selon le rôle et le contexte
+     * 
+     * @param \App\Models\User $user
+     * @return string|null
+     */
+    protected function determineDashboardRoute($user): ?string
+    {
+        // Dashboard Administration (priorité haute)
+        if ($user->hasAnyRole(['super_admin', 'admin', 'directeur'])) {
+            return 'admin.dashboard.index';
+        }
 
-        // Prochaines évaluations et deadlines
-        $upcomingDeadlines = collect([
-            [
-                'title' => 'Évaluation de Mathématiques - CM2',
-                'date' => Carbon::now()->addDays(3),
-                'type' => 'evaluation',
-                'class' => 'CM2-A'
-            ],
-            [
-                'title' => 'Remise des bulletins - CP1',
-                'date' => Carbon::now()->addDays(7),
-                'type' => 'deadline',
-                'class' => 'CP1-B'
-            ]
-        ]);
+        // Dashboard Enseignant
+        if ($user->hasRole('teacher') || $user->isTeacher()) {
+            return 'teacher.dashboard.index';
+        }
 
-        // Statistiques des classes
-        $classStats = $assignments->map(function ($assignment) {
-            $class = $assignment->schoolClass;
-            return [
-                'name' => $class->name,
-                'subject' => $assignment->subject->name ?? 'Non défini',
-                'students_count' => $class->students()->count(),
-                'level' => $class->level->name ?? 'Non défini'
+        // Dashboard Étudiant (contextualisé selon le type d'école)
+        if ($user->hasRole('student') || $user->isStudent()) {
+            return $this->getStudentDashboardRoute($user);
+        }
+
+        // Dashboard Staff/Personnel  
+        if ($user->hasAnyRole(['staff', 'accountant', 'supervisor']) || $user->isStaff()) {
+            return 'staff.dashboard.index';
+        }
+
+        // Dashboard Parent (à implémenter en Phase 3)
+        if ($user->hasRole('parent') || $user->isParent()) {
+            return 'parent.dashboard.index'; // Route à créer
+        }
+
+        return null;
+    }
+
+    /**
+     * Déterminer la route de dashboard étudiant selon le contexte école
+     * 
+     * @param \App\Models\User $user
+     * @return string
+     */
+    protected function getStudentDashboardRoute($user): string
+    {
+        // Récupérer le type d'école depuis le contexte
+        $schoolType = $this->getSchoolContextService()->getCurrentSchoolType();
+
+        // Si pas de contexte école, utiliser l'école de l'utilisateur
+        if (!$schoolType) {
+            $userSchool = $this->getSchoolContextService()->getSchoolForUser($user);
+            $schoolType = $userSchool ? $userSchool->type : 'pre_university';
+        }
+
+        // Retourner la route appropriée selon le type d'école
+        if ($schoolType === 'university') {
+            return 'student.university.dashboard.index';
+        }
+
+        return 'student.preuniversity.dashboard.index';
+    }
+
+    /**
+     * Obtenir le type de profil utilisateur
+     * 
+     * @param \App\Models\User $user
+     * @return string
+     */
+    protected function getUserProfileType($user): string
+    {
+        if ($user->isStudent()) return 'student';
+        if ($user->isTeacher()) return 'teacher';
+        if ($user->isParent()) return 'parent';
+        if ($user->isStaff()) return 'staff';
+        
+        return 'user';
+    }
+
+    /**
+     * Obtenir le type de dashboard courant
+     * 
+     * @param \App\Models\User $user
+     * @return string
+     */
+    protected function getCurrentDashboardType($user): string
+    {
+        if ($user->hasAnyRole(['super_admin', 'admin', 'directeur'])) {
+            return 'admin';
+        }
+        
+        if ($user->hasRole('teacher') || $user->isTeacher()) {
+            return 'teacher';
+        }
+        
+        if ($user->hasRole('student') || $user->isStudent()) {
+            $schoolType = $this->getSchoolContextService()->getCurrentSchoolType();
+            return $schoolType === 'university' ? 'university_student' : 'preuniversity_student';
+        }
+        
+        if ($user->hasAnyRole(['staff', 'accountant', 'supervisor'])) {
+            return 'staff';
+        }
+        
+        return 'default';
+    }
+
+    /**
+     * Obtenir les actions disponibles pour l'utilisateur
+     * 
+     * @param \App\Models\User $user
+     * @return array
+     */
+    protected function getAvailableActions($user): array
+    {
+        $actions = [];
+
+        // Actions selon les permissions
+        if ($user->can('view_own_data')) {
+            $actions[] = [
+                'title' => 'Mon Profil',
+                'description' => 'Consulter et modifier mes informations',
+                'route' => 'profile.edit',
+                'icon' => 'user',
             ];
-        });
-
-        return view('dashboards.teacher', compact(
-            'teacher', 'assignments', 'totalClasses', 'totalStudents',
-            'upcomingDeadlines', 'classStats'
-        ));
-    }
-
-    /**
-     * Dashboard Élève
-     */
-    public function studentDashboard()
-    {
-        $user = Auth::user();
-        $student = $user->student;
-
-        if (!$student) {
-            return redirect()->route('dashboard')->with('error', 'Profil étudiant non trouvé.');
         }
 
-        // Informations de la classe
-        $currentClass = $student->currentEnrollment()?->schoolClass;
-        
-        // Solde financier
-        $currentYear = AcademicYear::current();
-        $totalDue = $currentYear ? SchoolFee::where('academic_year_id', $currentYear->id)->sum('amount') : 0;
-        
-        $totalPaid = Payment::where('student_id', $student->id)
-            ->where('status', 'confirmed')
-            ->sum('amount');
-            
-        $balance = $totalDue - $totalPaid;
+        if ($user->can('view_dashboard')) {
+            $actions[] = [
+                'title' => 'Tableau de bord',
+                'description' => 'Accéder à mon espace de travail',
+                'route' => 'dashboard.redirect',
+                'icon' => 'dashboard',
+            ];
+        }
 
-        // Historique des paiements
-        $recentPayments = Payment::with('schoolFee')
-            ->where('student_id', $student->id)
-            ->orderBy('created_at', 'desc')
-            ->limit(5)
-            ->get();
-
-        // Notifications importantes
-        $notifications = collect([
-            [
-                'type' => 'payment',
-                'title' => 'Frais de scolarité en attente',
-                'message' => 'Votre paiement du mois est en attente de confirmation',
-                'date' => Carbon::now()->subDays(2),
-                'urgent' => true
-            ],
-            [
-                'type' => 'grade',
-                'title' => 'Nouvelles notes disponibles',
-                'message' => 'Vos notes de mathématiques ont été publiées',
-                'date' => Carbon::now()->subDays(1),
-                'urgent' => false
-            ]
-        ]);
-
-        // Résultats récents (simulation)
-        $recentGrades = collect([
-            [
-                'subject' => 'Mathématiques', 
-                'grade' => 16, 
-                'evaluation_type' => 'Devoir surveillé',
-                'coefficient' => 3,
-                'class_average' => 12.5,
-                'rank' => 3,
-                'total_students' => 25,
-                'date' => Carbon::now()->subDays(3)
-            ],
-            [
-                'subject' => 'Français', 
-                'grade' => 14, 
-                'evaluation_type' => 'Composition',
-                'coefficient' => 4,
-                'class_average' => 11.8,
-                'rank' => 5,
-                'total_students' => 25,
-                'date' => Carbon::now()->subDays(5)
-            ],
-            [
-                'subject' => 'Sciences', 
-                'grade' => 18, 
-                'evaluation_type' => 'Interrogation',
-                'coefficient' => 2,
-                'class_average' => 13.2,
-                'rank' => 1,
-                'total_students' => 25,
-                'date' => Carbon::now()->subDays(7)
-            ],
-        ]);
-
-        // Calcul de la moyenne générale et données supplémentaires
-        $generalAverage = $recentGrades->avg('grade');
-        $averageTrend = 1.2; // +1.2 points vs période précédente
-        $totalSubjects = 8;
-        $classRank = 4;
-        $totalClassStudents = 25;
-        $pendingPaymentsAmount = max(0, $balance);
-
-        // Moyennes par matière
-        $subjectAverages = collect([
-            ['name' => 'Mathématiques', 'average' => 15.5, 'coefficient' => 4, 'rank' => 3],
-            ['name' => 'Français', 'average' => 13.8, 'coefficient' => 4, 'rank' => 7],
-            ['name' => 'Sciences', 'average' => 16.2, 'coefficient' => 3, 'rank' => 2],
-            ['name' => 'Histoire-Géo', 'average' => 14.1, 'coefficient' => 2, 'rank' => 6],
-            ['name' => 'Anglais', 'average' => 12.9, 'coefficient' => 2, 'rank' => 8],
-            ['name' => 'EPS', 'average' => 17.5, 'coefficient' => 1, 'rank' => 1],
-        ]);
-
-        // Historique des paiements formaté
-        $recentPayments = collect([
-            [
-                'description' => 'Frais de scolarité - Janvier 2024',
-                'amount' => 50000,
-                'date' => Carbon::now()->subDays(15),
-                'status' => 'paid'
-            ],
-            [
-                'description' => 'Frais cantine - T2 2024',
-                'amount' => 25000,
-                'date' => Carbon::now()->subDays(30),
-                'status' => 'paid'
-            ],
-            [
-                'description' => 'Matériel scolaire',
-                'amount' => 15000,
-                'date' => Carbon::now()->subDays(45),
-                'status' => 'paid'
-            ]
-        ]);
-
-        return view('dashboards.student', compact(
-            'student', 'currentClass', 'totalDue', 'totalPaid', 'balance',
-            'recentPayments', 'notifications', 'recentGrades', 'generalAverage',
-            'averageTrend', 'totalSubjects', 'classRank', 'totalClassStudents',
-            'pendingPaymentsAmount', 'subjectAverages'
-        ));
-    }
-
-    /**
-     * Dashboard par défaut
-     */
-    private function defaultDashboard()
-    {
-        return view('dashboards.default');
+        return $actions;
     }
 }

@@ -3,68 +3,114 @@
 namespace App\Traits;
 
 use App\Models\School;
+use App\Services\SchoolContextService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 /**
- * Trait pour gérer le contexte scolaire
+ * Trait unifié pour gérer le contexte scolaire
  * 
- * Ce trait fournit des méthodes pour :
- * - Obtenir l'école active
- * - Valider le mode de l'école (universitaire/pré-universitaire)
+ * Ce trait fournit une interface unifiée pour :
+ * - Accéder au contexte école courant
+ * - Valider les modes d'école (universitaire/pré-universitaire)
  * - Gérer les réponses selon le contexte
+ * 
+ * ⚠️ Ce trait remplace tous les anciens traits de contexte (HasUniversityContext, etc.)
  * 
  * @trait
  * @package App\Traits
- * @author N'golo Madou OUATTARA
- * @version 1.0
- * @since 2026-01-02
+ * @author EnmaSchool Core Team
+ * @version 1.0 - Refactoring complet
+ * @since 2026-01-06
  */
 trait HasSchoolContext
 {
     /**
-     * École mise en cache
+     * Instance du service de contexte école
      * 
-     * @var School|null
+     * @var SchoolContextService|null
      */
-    protected ?School $cachedSchool = null;
+    protected ?SchoolContextService $schoolContextService = null;
 
     /**
-     * Get the active school
-     *
-     * @return School|null
+     * Obtenir l'instance du service de contexte école
+     * 
+     * @return SchoolContextService
      */
-    protected function getActiveSchool()
+    protected function getSchoolContextService(): SchoolContextService
     {
-        if (!$this->cachedSchool) {
-            $this->cachedSchool = School::getActiveSchool();
+        if (!$this->schoolContextService) {
+            $this->schoolContextService = app(SchoolContextService::class);
         }
-        
-        return $this->cachedSchool;
+
+        return $this->schoolContextService;
     }
 
     /**
-     * Obtenir l'école active avec validation
+     * Obtenir l'école courante depuis le contexte
      * 
-     * @return School École active
+     * @return School|null L'école courante ou null
+     */
+    protected function getCurrentSchool(): ?School
+    {
+        // Priorité 1 : Récupérer depuis l'injection dans la request
+        if (request()->has('current_school')) {
+            return request()->input('current_school');
+        }
+
+        // Priorité 2 : Récupérer depuis le container Laravel
+        try {
+            $schoolFromContainer = app('current_school');
+            if ($schoolFromContainer) {
+                return $schoolFromContainer;
+            }
+        } catch (\Illuminate\Contracts\Container\BindingResolutionException $e) {
+            // Le binding n'existe pas, continuer avec la priorité 3
+        }
+
+        // Priorité 3 : Récupérer via le service
+        return $this->getSchoolContextService()->getCurrentSchoolContext();
+    }
+
+    /**
+     * Obtenir l'école courante avec validation obligatoire
+     * 
+     * @return School L'école courante
      * @throws \RuntimeException Si aucune école n'est configurée
      */
-    protected function getCurrentSchool(): School
+    protected function getCurrentSchoolRequired(): School
     {
-        $school = $this->getActiveSchool();
+        $school = $this->getCurrentSchool();
         
         if (!$school) {
-            throw new \RuntimeException('Aucun établissement configuré dans le système.');
+            throw new \RuntimeException('Aucun contexte école disponible. Veuillez configurer un établissement.');
         }
         
         return $school;
     }
 
     /**
-     * Ensure a school exists, redirect to school creation if not
+     * Vérifier si l'utilisateur courant a accès au contexte école
+     * 
+     * @return bool True si l'utilisateur a un contexte école valide
+     */
+    protected function hasValidSchoolContext(): bool
+    {
+        return $this->getSchoolContextService()->hasValidSchoolContext();
+    }
+
+    /**
+     * S'assurer qu'un contexte école existe, rediriger vers la création si ce n'est pas le cas
+     * 
+     * @return \Illuminate\Http\RedirectResponse|null Redirection ou null si OK
      */
     protected function ensureSchoolExists()
     {
-        if (!$this->getActiveSchool()) {
+        if (!$this->getCurrentSchool()) {
+            if (request()->expectsJson()) {
+                abort(422, 'Aucun établissement configuré. Veuillez configurer votre établissement.');
+            }
+
             return redirect()->route('admin.schools.create')
                 ->with('warning', 'Veuillez d\'abord configurer votre établissement.');
         }
@@ -73,241 +119,196 @@ trait HasSchoolContext
     }
 
     /**
-     * S'assurer que l'école est en mode universitaire
+     * S'assurer que l'école courante est en mode universitaire
      * 
      * @throws \RuntimeException Si l'école n'est pas en mode universitaire
      */
     protected function ensureUniversityMode(): void
     {
-        if (!$this->getCurrentSchool()->isUniversity()) {
+        if (!$this->isUniversityMode()) {
             throw new \RuntimeException('Cette fonctionnalité n\'est disponible qu\'en mode universitaire.');
         }
     }
 
     /**
-     * S'assurer que l'école est en mode pré-universitaire
+     * S'assurer que l'école courante est en mode pré-universitaire
      * 
      * @throws \RuntimeException Si l'école n'est pas en mode pré-universitaire
      */
     protected function ensurePreUniversityMode(): void
     {
-        if (!$this->getCurrentSchool()->isPreUniversity()) {
+        if (!$this->isPreUniversityMode()) {
             throw new \RuntimeException('Cette fonctionnalité n\'est disponible qu\'en mode pré-universitaire.');
         }
     }
 
     /**
-     * Get a school setting value
-     *
-     * @param string $key
-     * @param mixed $default
-     * @return mixed
+     * Obtenir le type d'école courante
+     * 
+     * @return string|null Le type d'école ('university', 'pre_university') ou null
      */
-    protected function getSchoolSetting(string $key, $default = null)
+    protected function getSchoolType(): ?string
     {
-        $school = $this->getActiveSchool();
-        return $school ? $school->getSetting($key, $default) : $default;
+        return $this->getSchoolContextService()->getCurrentSchoolType();
     }
 
     /**
-     * Obtenir le contexte de base de l'école
+     * Vérifier si l'école courante est en mode universitaire
      * 
-     * @return array<string, mixed> Contexte scolaire
+     * @return bool True si l'école est universitaire
      */
-    protected function getSchoolContext(): array
+    protected function isUniversityMode(): bool
+    {
+        return $this->getSchoolContextService()->isUniversityContext();
+    }
+
+    /**
+     * Vérifier si l'école courante est en mode pré-universitaire
+     * 
+     * @return bool True si l'école est pré-universitaire
+     */
+    protected function isPreUniversityMode(): bool
+    {
+        return $this->getSchoolContextService()->isPreUniversityContext();
+    }
+
+    /**
+     * Rediriger selon le type d'école avec un message d'erreur
+     * 
+     * @param string $message Message d'erreur personnalisé
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    protected function redirectWithSchoolTypeError(string $message = null): \Illuminate\Http\RedirectResponse
+    {
+        $defaultMessage = 'Cette fonctionnalité n\'est pas disponible pour le type d\'établissement configuré.';
+        $errorMessage = $message ?? $defaultMessage;
+
+        return redirect()->back()->with('error', $errorMessage);
+    }
+
+    /**
+     * Obtenir l'école pour l'utilisateur courant
+     * 
+     * @return School|null L'école de l'utilisateur ou null
+     */
+    protected function getUserSchool(): ?School
+    {
+        $user = Auth::user();
+        
+        if (!$user) {
+            return null;
+        }
+
+        return $this->getSchoolContextService()->getSchoolForUser($user);
+    }
+
+    /**
+     * Vérifier si l'utilisateur a accès à une école spécifique
+     * 
+     * @param School $school L'école à vérifier
+     * @return bool True si l'utilisateur a accès
+     */
+    protected function userHasSchoolAccess(School $school): bool
+    {
+        $user = Auth::user();
+        
+        if (!$user) {
+            return false;
+        }
+
+        return $this->getSchoolContextService()->validateSchoolAccess($user, $school);
+    }
+
+    /**
+     * Obtenir toutes les écoles accessibles à l'utilisateur courant
+     * 
+     * @return \Illuminate\Database\Eloquent\Collection Collection des écoles accessibles
+     */
+    protected function getAccessibleSchools()
+    {
+        $user = Auth::user();
+        
+        if (!$user) {
+            return collect([]);
+        }
+
+        return $this->getSchoolContextService()->getAccessibleSchoolsForUser($user);
+    }
+
+    /**
+     * Réinitialiser le cache du contexte école
+     * 
+     * Utile après des changements de configuration
+     * 
+     * @return void
+     */
+    protected function resetSchoolContextCache(): void
+    {
+        $this->schoolContextService = null;
+        $this->getSchoolContextService()->resetContext();
+    }
+
+    /**
+     * Obtenir des données de contexte école pour les vues
+     * 
+     * @return array Données de contexte
+     */
+    protected function getSchoolContextData(): array
     {
         $school = $this->getCurrentSchool();
         
+        if (!$school) {
+            return [
+                'school' => null,
+                'school_type' => null,
+                'is_university' => false,
+                'is_pre_university' => false,
+            ];
+        }
+
         return [
             'school' => $school,
-            'school_id' => $school->id,
-            'school_name' => $school->name,
             'school_type' => $school->type,
-            'is_university' => $school->isUniversity(),
-            'is_pre_university' => $school->isPreUniversity(),
-            'academic_year' => \App\Models\AcademicYear::current()->first(),
-            'context_timestamp' => now()->toISOString(),
+            'is_university' => $school->type === 'university',
+            'is_pre_university' => $school->type === 'pre_university',
         ];
     }
 
     /**
-     * Obtenir le contexte universitaire avec validation
+     * Validation des permissions selon le contexte école
      * 
-     * @return array<string, mixed> Contexte universitaire
-     * @throws \RuntimeException Si pas en mode universitaire
+     * @param string $permission Nom de la permission
+     * @return bool True si l'utilisateur a la permission dans le contexte école courant
      */
-    protected function getUniversityContext(): array
+    protected function hasSchoolContextPermission(string $permission): bool
     {
-        $this->ensureUniversityMode();
+        $user = Auth::user();
         
-        $context = $this->getSchoolContext();
-        $school = $this->getCurrentSchool();
-        
-        // Ajouter des statistiques universitaires de base
-        $context['university_stats'] = [
-            'total_ufrss' => $school->ufrss()->count(),
-            'total_departments' => $school->departments()->count(),
-            'total_programs' => $school->programs()->count(),
-            'total_students' => $school->students()->count(),
-        ];
-        
-        return $context;
+        if (!$user || !$this->hasValidSchoolContext()) {
+            return false;
+        }
+
+        // Pour V1 : utilisation standard des permissions Spatie
+        // En V2, on ajoutera la logique de permissions contextuelles par école
+        return $user->hasPermissionTo($permission);
     }
 
     /**
-     * Créer une réponse avec contexte scolaire
+     * Validation des rôles selon le contexte école
      * 
-     * @param Request $request Requête HTTP
-     * @param string $view Vue à retourner
-     * @param array $data Données supplémentaires
-     * @param string|null $successMessage Message de succès
-     * @return \Illuminate\View\View|\Illuminate\Http\JsonResponse
+     * @param string $role Nom du rôle
+     * @return bool True si l'utilisateur a le rôle dans le contexte école courant
      */
-    protected function createContextualResponse(
-        Request $request,
-        string $view,
-        array $data = [],
-        ?string $successMessage = null
-    ) {
-        $contextData = array_merge($this->getSchoolContext(), $data);
-        
-        if ($request->expectsJson()) {
-            $response = [
-                'success' => true,
-                'data' => $contextData,
-            ];
-            
-            if ($successMessage) {
-                $response['message'] = $successMessage;
-            }
-            
-            return response()->json($response);
-        }
-        
-        return view($view, $contextData);
-    }
-
-    /**
-     * Gérer les erreurs avec contexte approprié
-     * 
-     * @param Request $request Requête HTTP
-     * @param string $errorMessage Message d'erreur
-     * @param \Exception|null $exception Exception source
-     * @param string|null $fallbackRoute Route de redirection
-     * @return \Illuminate\Http\JsonResponse|\Illuminate\Http\RedirectResponse
-     */
-    protected function handleContextualError(
-        Request $request,
-        string $errorMessage,
-        ?\Exception $exception = null,
-        ?string $fallbackRoute = null
-    ) {
-        // Logger l'erreur avec contexte
-        if ($exception) {
-            \Log::error('Erreur contextuelle', [
-                'message' => $errorMessage,
-                'exception' => $exception->getMessage(),
-                'school_id' => $this->getCurrentSchool()->id ?? null,
-                'user_id' => auth()->id(),
-                'request_url' => $request->url(),
-            ]);
-        }
-        
-        if ($request->expectsJson()) {
-            return response()->json([
-                'success' => false,
-                'message' => $errorMessage,
-                'error_code' => $exception ? get_class($exception) : 'GENERAL_ERROR',
-                'timestamp' => now()->toISOString(),
-            ], 400);
-        }
-        
-        $redirectTarget = $fallbackRoute ? route($fallbackRoute) : back();
-        
-        return redirect($redirectTarget)->with('error', $errorMessage);
-    }
-
-    /**
-     * Valider les permissions basées sur le contexte scolaire
-     * 
-     * @param string $permission Permission requise
-     * @param mixed $resource Resource optionnelle
-     * @param bool $requireUniversityMode Exiger le mode universitaire
-     * @throws \Illuminate\Auth\Access\AuthorizationException
-     * @throws \RuntimeException
-     */
-    protected function validateContextualPermissions(
-        string $permission,
-        $resource = null,
-        bool $requireUniversityMode = false
-    ): void {
-        // Vérifier le mode si requis
-        if ($requireUniversityMode) {
-            $this->ensureUniversityMode();
-        }
-        
-        // Vérifier les permissions Laravel
-        if ($resource) {
-            $this->authorize($permission, $resource);
-        } else {
-            $this->authorize($permission);
-        }
-    }
-
-    /**
-     * Obtenir les routes contextuelles selon le mode de l'école
-     * 
-     * @param string $baseRoute Route de base
-     * @return array<string, string> Routes disponibles
-     */
-    protected function getContextualRoutes(string $baseRoute): array
+    protected function hasSchoolContextRole(string $role): bool
     {
-        $school = $this->getCurrentSchool();
-        $prefix = $school->isUniversity() ? 'university' : 'pre-university';
+        $user = Auth::user();
         
-        return [
-            'index' => "{$prefix}.{$baseRoute}.index",
-            'create' => "{$prefix}.{$baseRoute}.create",
-            'store' => "{$prefix}.{$baseRoute}.store",
-            'show' => "{$prefix}.{$baseRoute}.show",
-            'edit' => "{$prefix}.{$baseRoute}.edit",
-            'update' => "{$prefix}.{$baseRoute}.update",
-            'destroy' => "{$prefix}.{$baseRoute}.destroy",
-        ];
-    }
-
-    /**
-     * Créer des réponses CRUD standardisées avec contexte
-     * 
-     * @param Request $request Requête HTTP
-     * @param bool $success Succès de l'opération
-     * @param string $message Message
-     * @param string $indexRoute Route d'index
-     * @param array $routeParams Paramètres de route
-     * @param mixed $data Données additionnelles
-     * @return \Illuminate\Http\Response|\Illuminate\Http\RedirectResponse|\Illuminate\Http\JsonResponse
-     */
-    protected function createCrudResponse(
-        Request $request,
-        bool $success,
-        string $message,
-        string $indexRoute,
-        array $routeParams = [],
-        $data = null
-    ) {
-        if ($request->expectsJson()) {
-            return response()->json([
-                'success' => $success,
-                'message' => $message,
-                'data' => $data,
-                'context' => $this->getSchoolContext(),
-                'timestamp' => now()->toISOString(),
-            ], $success ? 200 : 400);
+        if (!$user || !$this->hasValidSchoolContext()) {
+            return false;
         }
-        
-        $messageType = $success ? 'success' : 'error';
-        
-        return redirect()->route($indexRoute, $routeParams)
-            ->with($messageType, $message);
+
+        // Pour V1 : utilisation standard des rôles Spatie
+        // En V2, on ajoutera la logique de rôles contextuels par école
+        return $user->hasRole($role);
     }
 }
