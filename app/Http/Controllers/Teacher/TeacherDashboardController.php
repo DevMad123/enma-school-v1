@@ -69,10 +69,10 @@ class TeacherDashboardController extends Controller
         // Récupérer les données contextualisées selon le type d'école
         if ($this->isUniversityMode()) {
             $dashboardData = $this->dashboardService->getUniversityTeacherData($teacher, $school);
-            $viewName = 'dashboards.teacher.university';
+            $viewName = 'dashboards.teacher.index'; // Vue unifiée
         } else {
             $dashboardData = $this->dashboardService->getPreUniversityTeacherData($teacher, $school);
-            $viewName = 'dashboards.teacher.preuniversity';
+            $viewName = 'dashboards.teacher.index'; // Vue unifiée
         }
 
         $contextData = $this->getSchoolContextData();
@@ -95,7 +95,7 @@ class TeacherDashboardController extends Controller
         $scheduleData = $this->dashboardService->getTeacherSchedule($teacher, $school);
         $contextData = $this->getSchoolContextData();
 
-        return view('dashboards.teacher.schedule', array_merge($scheduleData, $contextData));
+        return view('dashboards.teacher.index', array_merge($scheduleData, $contextData));
     }
 
     /**
@@ -115,7 +115,7 @@ class TeacherDashboardController extends Controller
         $evaluationData = $this->dashboardService->getTeacherEvaluations($teacher, $school);
         $contextData = $this->getSchoolContextData();
 
-        return view('dashboards.teacher.evaluations', array_merge($evaluationData, $contextData));
+        return view('dashboards.teacher.index', array_merge($evaluationData, $contextData));
     }
 
     /**
@@ -133,7 +133,7 @@ class TeacherDashboardController extends Controller
         $classesData = $this->dashboardService->getTeacherClasses($teacher, $school);
         $contextData = $this->getSchoolContextData();
 
-        return view('dashboards.teacher.classes', array_merge($classesData, $contextData));
+        return view('dashboards.teacher.index', array_merge($classesData, $contextData));
     }
 
     /**

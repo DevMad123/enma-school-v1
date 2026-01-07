@@ -19,7 +19,8 @@ return new class extends Migration
             $table->foreignId('school_id')->constrained()->onDelete('cascade');
             
             // Référence polymorphique au niveau éducatif (Level ou Semester)
-            $table->nullableMorphs('educational_level'); // educational_level_type, educational_level_id
+            $table->string('educational_level_type')->nullable();
+            $table->unsignedBigInteger('educational_level_id')->nullable();
             
             // Données communes matière/UE
             $table->string('name'); // Nom de la matière/UE
@@ -74,7 +75,7 @@ return new class extends Migration
             
             // Index pour performance
             $table->index(['school_id', 'educational_context']);
-            $table->index(['educational_level_type', 'educational_level_id']);
+            $table->index(['educational_level_type', 'educational_level_id'], 'edu_subjects_level_idx');
             $table->index(['subject_type', 'is_active']);
             $table->index(['code']);
             $table->index(['coordinator_id']);

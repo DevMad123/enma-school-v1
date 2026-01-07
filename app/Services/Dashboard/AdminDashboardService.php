@@ -34,14 +34,17 @@ class AdminDashboardService
      */
     public function getAdminDashboardData(User $user, School $school): array
     {
+        $overviewStats = $this->getOverviewStatistics($school);
+        $financialSummary = $this->getFinancialSummary($school);
+        $supervisionStats = $this->getSupervisionStatistics($school);
+        
         return [
-            'overview_stats' => $this->getOverviewStatistics($school),
-            'financial_summary' => $this->getFinancialSummary($school),
-            'academic_summary' => $this->getAcademicSummary($school),
-            'supervision_stats' => $this->getSupervisionStatistics($school),
+            'overview_stats' => $overviewStats,
+            'financial_stats' => $financialSummary,
+            'supervision_data' => $supervisionStats,
             'recent_activities' => $this->getRecentActivities($school),
-            'pending_actions' => $this->getPendingActions($school),
-            'system_health' => $this->getSystemHealthData($school),
+            'quick_actions' => $this->getQuickActions(),
+            'enrollment_trend' => $this->getEnrollmentTrend($school),
         ];
     }
 
@@ -90,6 +93,7 @@ class AdminDashboardService
     protected function getOverviewStatistics(School $school): array
     {
         return [
+            'school_context' => $school->name . ' (' . ucfirst($school->type) . ')',
             'total_students' => Student::count(),
             'total_teachers' => Teacher::count(),
             'total_classes' => SchoolClass::count(),
@@ -109,9 +113,11 @@ class AdminDashboardService
     protected function getFinancialSummary(School $school): array
     {
         $currentYear = AcademicYear::current();
+        $totalRevenue = Payment::where('status', 'confirmed')->sum('amount');
+        $totalExpected = SchoolFee::where('status', 'active')->sum('amount');
         
         return [
-            'total_revenue' => Payment::where('status', 'confirmed')->sum('amount'),
+            'total_revenue' => $totalRevenue,
             'monthly_revenue' => Payment::where('status', 'confirmed')
                 ->whereMonth('created_at', Carbon::now()->month)
                 ->sum('amount'),
@@ -119,7 +125,7 @@ class AdminDashboardService
             'overdue_payments' => SchoolFee::where('due_date', '<', Carbon::now())
                 ->where('status', 'active')
                 ->count(),
-            'revenue_trend' => $this->getRevenueTrend(),
+            'collection_rate' => $totalExpected > 0 ? round(($totalRevenue / $totalExpected) * 100, 1) : 0,
         ];
     }
 
@@ -152,8 +158,8 @@ class AdminDashboardService
     {
         return [
             'today_logins' => UserLog::byAction('logged_in')->today()->count(),
-            'week_unique_users' => UserLog::byAction('logged_in')->thisWeek()->distinct('user_id')->count(),
-            'monthly_activities' => ActivityLog::thisMonth()->count(),
+            'active_users_week' => UserLog::byAction('logged_in')->thisWeek()->distinct('user_id')->count(),
+            'system_activities' => ActivityLog::thisMonth()->count(),
             'active_teachers' => $this->getActiveTeachersCount(),
             'active_students' => $this->getActiveStudentsCount(),
             'system_usage' => $this->getSystemUsageMetrics(),
@@ -166,23 +172,56 @@ class AdminDashboardService
      * @param School $school
      * @return array
      */
-    protected function getRecentActivities(School $school): array
+    protected function getRecentActivities(School $school): \Illuminate\Support\Collection
     {
-        return [
-            'recent_payments' => Payment::with(['student.user', 'schoolFee'])
-                ->where('status', 'confirmed')
+        $activities = collect();
+
+        // Paiements récents
+        Payment::with(['student.user', 'schoolFee'])
+            ->where('status', 'confirmed')
+            ->latest()
+            ->limit(3)
+            ->get()
+            ->each(function($payment) use ($activities) {
+                $activities->push([
+                    'icon' => 'money-bill-wave',
+                    'title' => 'Paiement reçu',
+                    'description' => $payment->student->user->name . ' - ' . number_format($payment->amount) . ' XOF',
+                    'date' => $payment->created_at
+                ]);
+            });
+
+        // Inscriptions récentes
+        Student::with('user')
+            ->latest()
+            ->limit(3)
+            ->get()
+            ->each(function($student) use ($activities) {
+                $activities->push([
+                    'icon' => 'user-plus',
+                    'title' => 'Nouvelle inscription',
+                    'description' => 'Nouvel étudiant : ' . $student->user->name,
+                    'date' => $student->created_at
+                ]);
+            });
+
+        // Activités système récentes
+        if (class_exists('App\Models\ActivityLog')) {
+            ActivityLog::with('user')
                 ->latest()
-                ->limit(5)
-                ->get(),
-            'recent_enrollments' => Student::with('user')
-                ->latest()
-                ->limit(5)
-                ->get(),
-            'recent_system_activities' => ActivityLog::with('user')
-                ->latest()
-                ->limit(5)
-                ->get(),
-        ];
+                ->limit(2)
+                ->get()
+                ->each(function($log) use ($activities) {
+                    $activities->push([
+                        'icon' => 'cog',
+                        'title' => 'Activité système',
+                        'description' => $log->description ?? 'Action système',
+                        'date' => $log->created_at
+                    ]);
+                });
+        }
+
+        return $activities->sortByDesc('date')->take(8);
     }
 
     /**
@@ -399,5 +438,69 @@ class AdminDashboardService
     {
         // À implémenter selon les besoins
         return [];
+    }
+
+    /**
+     * Actions rapides disponibles pour l'admin
+     * 
+     * @return array
+     */
+    protected function getQuickActions(): array
+    {
+        return [
+            [
+                'title' => 'Nouvel Étudiant',
+                'route' => 'admin.students.create',
+                'icon' => 'user-plus',
+                'color' => 'primary',
+                'permission' => 'create_students'
+            ],
+            [
+                'title' => 'Nouvel Enseignant',
+                'route' => 'admin.teachers.create',
+                'icon' => 'chalkboard-teacher',
+                'color' => 'success',
+                'permission' => 'create_teachers'
+            ],
+            [
+                'title' => 'Nouvelle Année',
+                'route' => 'admin.academic-years.create',
+                'icon' => 'calendar-plus',
+                'color' => 'info',
+                'permission' => 'manage_academic_years'
+            ],
+            [
+                'title' => 'Rapports',
+                'route' => 'admin.supervision.index',
+                'icon' => 'chart-bar',
+                'color' => 'warning',
+                'permission' => 'view_reports'
+            ]
+        ];
+    }
+
+    /**
+     * Tendance des inscriptions sur 6 mois
+     * 
+     * @param School $school
+     * @return \Illuminate\Support\Collection
+     */
+    protected function getEnrollmentTrend(School $school): \Illuminate\Support\Collection
+    {
+        $months = collect();
+        
+        for ($i = 5; $i >= 0; $i--) {
+            $date = Carbon::now()->subMonths($i);
+            $count = Student::whereYear('created_at', $date->year)
+                          ->whereMonth('created_at', $date->month)
+                          ->count();
+            
+            $months->push([
+                'month' => $date->format('M'),
+                'count' => $count
+            ]);
+        }
+        
+        return $months;
     }
 }

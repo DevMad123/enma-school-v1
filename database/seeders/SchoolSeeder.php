@@ -24,28 +24,26 @@ class SchoolSeeder extends Seeder
             return;
         }
         
-        // École principale - Système trimestre
+        // École principale - Système université
         $school1 = School::create([
-            'name' => 'École Enma School',
-            'short_name' => 'EES',
-            'type' => 'pre_university',
-            'educational_levels' => ['primary', 'secondary'],
-            'email' => 'contact@enmaschool.edu.ci',
+            'name' => 'Université Enma',
+            'short_name' => 'UE',
+            'type' => 'university',
+            'email' => 'contact@universite-enma.edu.ci',
             'phone' => '+225 01 02 03 04 05',
-            'address' => '123 Rue de l\'Éducation, Cocody',
+            'address' => '123 Avenue de l\'Université, Cocody',
             'city' => 'Abidjan',
             'country' => 'Côte d\'Ivoire',
-            'academic_system' => 'trimestre',
+            'academic_system' => 'semestre',
             'grading_system' => '20',
             'is_active' => true,
         ]);
 
-        // École secondaire - Système semestre
+        // École secondaire - Système préuniversitaire
         $school2 = School::create([
             'name' => 'Collège Moderne d\'Abidjan',
             'short_name' => 'CMA',
             'type' => 'pre_university',
-            'educational_levels' => ['secondary'],
             'email' => 'info@collegemoderne.edu.ci',
             'phone' => '+225 01 02 03 04 06',
             'address' => '456 Boulevard de la Paix, Plateau',
@@ -61,7 +59,6 @@ class SchoolSeeder extends Seeder
             'name' => 'Groupe Scolaire Les Palmiers',
             'short_name' => 'GSP',
             'type' => 'pre_university',
-            'educational_levels' => ['primary', 'secondary'],
             'email' => 'direction@lespalmiers.edu.ci',
             'phone' => '+225 01 02 03 04 07',
             'address' => '789 Rue des Palmiers, Marcory',

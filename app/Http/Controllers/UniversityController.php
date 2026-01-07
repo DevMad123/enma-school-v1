@@ -1,5 +1,25 @@
 <?php
 
+/*
+ * ⚠️  CONTRÔLEUR EN COURS DE MIGRATION
+ *
+ * Ce contrôleur monolithique est en cours de refactorisation vers des controllers spécialisés.
+ * Les routes ont été mises à jour pour utiliser les nouveaux controllers.
+ *
+ * ✅ CONTROLLERS SPÉCIALISÉS CRÉÉS :
+ * • App\Http\Controllers\University\DashboardController
+ * • App\Http\Controllers\University\UFRController  
+ * • App\Http\Controllers\University\DepartmentController
+ * • App\Http\Controllers\University\ProgramController
+ * • App\Http\Controllers\University\SemesterController
+ * • App\Http\Controllers\University\CourseUnitController
+ * • App\Http\Controllers\University\CourseUnitElementController
+ *
+ * 🎯 STATUT MIGRATION : ROUTES MIGRÉES - CONTROLLER EN NETTOYAGE
+ * 
+ * Ce fichier peut être supprimé après validation complète du système.
+ */
+
 namespace App\Http\Controllers;
 
 use App\Models\School;
@@ -24,69 +44,20 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 
 /**
- * Contrôleur pour la gestion universitaire complète
+ * @deprecated Ce contrôleur sera supprimé. Utilisez les controllers spécialisés.
  * 
- * Ce contrôleur gère l'ensemble des entités universitaires :
- * - UFR (Unités de Formation et de Recherche)
- * - Départements  
- * - Programmes d'études
- * - Semestres
- * - Unités d'enseignement (Course Units)
- * 
- * Le contrôleur a été refactorisé pour utiliser :
- * - UniversityService : logique métier centralisée
- * - HasUniversityContext : contexte universitaire standardisé  
- * - HasCrudOperations : opérations CRUD réutilisables
- * 
- * @package App\Http\Controllers
- * @author N'golo Madou OUATTARA
- * @version 1.0
- * @since 2026-01-02
- * 
- * @uses UniversityService Service de logique métier universitaire
- * @uses HasUniversityContext Trait pour le contexte universitaire
- * @uses HasCrudOperations Trait pour les opérations CRUD
+ * Les méthodes ci-dessous sont conservées temporairement pour éviter les erreurs,
+ * mais toutes les routes ont été redirigées vers les nouveaux controllers spécialisés.
  */
 class UniversityController extends Controller
 {
     use HasUniversityContext, HasCrudOperations;
 
-    /**
-     * Service universitaire pour la logique métier
-     * 
-     * @var UniversityService
-     */
     protected UniversityService $universityService;
-    
-    /**
-     * Service des programmes pour la gestion spécialisée
-     * 
-     * @var ProgramService
-     */
     protected ProgramService $programService;
-    
-    /**
-     * Service des semestres pour la gestion spécialisée
-     * 
-     * @var SemesterService
-     */
     protected SemesterService $semesterService;
-
-    /**
-     * Service des éléments constitutifs pour la gestion des ECUE
-     * 
-     * @var CourseUnitElementService
-     */
     protected CourseUnitElementService $courseUnitElementService;
 
-    /**
-     * Constructeur du contrôleur
-     * 
-     * @param UniversityService $universityService Service universitaire injecté
-     * @param ProgramService $programService Service des programmes injecté
-     * @param SemesterService $semesterService Service des semestres injecté
-     * @param CourseUnitElementService $courseUnitElementService Service des ECUE injecté
-     */
     public function __construct(
         UniversityService $universityService,
         ProgramService $programService,
@@ -97,6 +68,77 @@ class UniversityController extends Controller
         $this->programService = $programService;
         $this->semesterService = $semesterService;
         $this->courseUnitElementService = $courseUnitElementService;
+        
+        // Log d'avertissement si ce contrôleur est encore utilisé
+        if (app()->environment('local')) {
+            \Log::warning('UniversityController obsolète utilisé. Les routes ont été migrées vers les controllers spécialisés.');
+        }
+    }
+
+    /**
+     * ⚠️  MÉTHODES CONSERVÉES TEMPORAIREMENT
+     * 
+     * Ces méthodes sont conservées pour éviter les erreurs de référence,
+     * mais ne devraient plus être appelées car les routes ont été mises à jour.
+     * 
+     * Elles retournent une erreur 410 (Gone) pour indiquer qu'elles ont été migrées.
+     */
+
+    public function dashboard(Request $request): RedirectResponse
+    {
+        return redirect()->route('university.dashboard')
+            ->with('info', 'Redirection automatique vers le nouveau dashboard universitaire');
+    }
+
+    // Toutes les autres méthodes retournent une erreur 410 pour indiquer la migration
+    public function ufrs() { abort(410, 'Cette fonctionnalité a été migrée vers University\UFRController'); }
+    public function createUFR() { abort(410, 'Cette fonctionnalité a été migrée vers University\UFRController'); }
+    public function storeUFR() { abort(410, 'Cette fonctionnalité a été migrée vers University\UFRController'); }
+    public function showUFR() { abort(410, 'Cette fonctionnalité a été migrée vers University\UFRController'); }
+    public function editUFR() { abort(410, 'Cette fonctionnalité a été migrée vers University\UFRController'); }
+    public function updateUFR() { abort(410, 'Cette fonctionnalité a été migrée vers University\UFRController'); }
+    public function destroyUFR() { abort(410, 'Cette fonctionnalité a été migrée vers University\UFRController'); }
+
+    public function departments() { abort(410, 'Cette fonctionnalité a été migrée vers University\DepartmentController'); }
+    public function createDepartment() { abort(410, 'Cette fonctionnalité a été migrée vers University\DepartmentController'); }
+    public function storeDepartment() { abort(410, 'Cette fonctionnalité a été migrée vers University\DepartmentController'); }
+    public function showDepartment() { abort(410, 'Cette fonctionnalité a été migrée vers University\DepartmentController'); }
+    public function editDepartment() { abort(410, 'Cette fonctionnalité a été migrée vers University\DepartmentController'); }
+    public function updateDepartment() { abort(410, 'Cette fonctionnalité a été migrée vers University\DepartmentController'); }
+    public function destroyDepartment() { abort(410, 'Cette fonctionnalité a été migrée vers University\DepartmentController'); }
+
+    public function programs() { abort(410, 'Cette fonctionnalité a été migrée vers University\ProgramController'); }
+    public function createProgram() { abort(410, 'Cette fonctionnalité a été migrée vers University\ProgramController'); }
+    public function storeProgram() { abort(410, 'Cette fonctionnalité a été migrée vers University\ProgramController'); }
+    public function showProgram() { abort(410, 'Cette fonctionnalité a été migrée vers University\ProgramController'); }
+    public function editProgram() { abort(410, 'Cette fonctionnalité a été migrée vers University\ProgramController'); }
+    public function updateProgram() { abort(410, 'Cette fonctionnalité a été migrée vers University\ProgramController'); }
+    public function destroyProgram() { abort(410, 'Cette fonctionnalité a été migrée vers University\ProgramController'); }
+
+    public function semesters() { abort(410, 'Cette fonctionnalité a été migrée vers University\SemesterController'); }
+    public function createSemester() { abort(410, 'Cette fonctionnalité a été migrée vers University\SemesterController'); }
+    public function storeSemester() { abort(410, 'Cette fonctionnalité a été migrée vers University\SemesterController'); }
+    public function showSemester() { abort(410, 'Cette fonctionnalité a été migrée vers University\SemesterController'); }
+    public function editSemester() { abort(410, 'Cette fonctionnalité a été migrée vers University\SemesterController'); }
+    public function updateSemester() { abort(410, 'Cette fonctionnalité a été migrée vers University\SemesterController'); }
+    public function destroySemester() { abort(410, 'Cette fonctionnalité a été migrée vers University\SemesterController'); }
+
+    public function courseUnits() { abort(410, 'Cette fonctionnalité a été migrée vers University\CourseUnitController'); }
+    public function createCourseUnit() { abort(410, 'Cette fonctionnalité a été migrée vers University\CourseUnitController'); }
+    public function storeCourseUnit() { abort(410, 'Cette fonctionnalité a été migrée vers University\CourseUnitController'); }
+    public function showCourseUnit() { abort(410, 'Cette fonctionnalité a été migrée vers University\CourseUnitController'); }
+    public function editCourseUnit() { abort(410, 'Cette fonctionnalité a été migrée vers University\CourseUnitController'); }
+    public function updateCourseUnit() { abort(410, 'Cette fonctionnalité a été migrée vers University\CourseUnitController'); }
+    public function destroyCourseUnit() { abort(410, 'Cette fonctionnalité a été migrée vers University\CourseUnitController'); }
+
+    public function showCourseUnitElements() { abort(410, 'Cette fonctionnalité a été migrée vers University\CourseUnitElementController'); }
+    public function createCourseUnitElement() { abort(410, 'Cette fonctionnalité a été migrée vers University\CourseUnitElementController'); }
+    public function storeCourseUnitElement() { abort(410, 'Cette fonctionnalité a été migrée vers University\CourseUnitElementController'); }
+    public function showCourseUnitElement() { abort(410, 'Cette fonctionnalité a été migrée vers University\CourseUnitElementController'); }
+    public function editCourseUnitElement() { abort(410, 'Cette fonctionnalité a été migrée vers University\CourseUnitElementController'); }
+    public function updateCourseUnitElement() { abort(410, 'Cette fonctionnalité a été migrée vers University\CourseUnitElementController'); }
+    public function destroyCourseUnitElement() { abort(410, 'Cette fonctionnalité a été migrée vers University\CourseUnitElementController'); }
+}
         
         // Assurer que l'école est en mode universitaire pour toutes les méthodes
         $this->middleware(function ($request, $next) {

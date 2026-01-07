@@ -309,88 +309,65 @@ Route::middleware('auth')->group(function () {
     // ==========================================
     Route::prefix('university')->name('university.')->middleware(['auth', 'university'])->group(function () {
         // Tableau de bord universitaire
-        Route::get('/', [\App\Http\Controllers\UniversityController::class, 'dashboard'])->name('dashboard');
+        Route::get('/', [\App\Http\Controllers\University\DashboardController::class, 'index'])->name('dashboard');
 
         // Resources optimisées avec nested routes
-        Route::resource('ufrs', \App\Http\Controllers\UniversityController::class, [
-            'names' => [
-                'index' => 'ufrs.index',
-                'create' => 'ufrs.create', 
-                'store' => 'ufrs.store',
-                'show' => 'ufrs.show',
-                'edit' => 'ufrs.edit',
-                'update' => 'ufrs.update',
-                'destroy' => 'ufrs.destroy',
-            ],
-            'parameters' => ['ufrs' => 'ufr']
-        ])->except(['index', 'create', 'store', 'show', 'edit', 'update', 'destroy']);
+        // Removed obsolete resource declaration
         
         // Routes UFR personnalisées
-        Route::get('ufrs', [\App\Http\Controllers\UniversityController::class, 'ufrs'])->name('ufrs.index');
-        Route::get('ufrs/create', [\App\Http\Controllers\UniversityController::class, 'createUFR'])->name('ufrs.create');
-        Route::post('ufrs', [\App\Http\Controllers\UniversityController::class, 'storeUFR'])->name('ufrs.store');
-        Route::get('ufrs/{ufr}', [\App\Http\Controllers\UniversityController::class, 'showUFR'])->name('ufrs.show');
-        Route::get('ufrs/{ufr}/edit', [\App\Http\Controllers\UniversityController::class, 'editUFR'])->name('ufrs.edit');
-        Route::put('ufrs/{ufr}', [\App\Http\Controllers\UniversityController::class, 'updateUFR'])->name('ufrs.update');
-        Route::delete('ufrs/{ufr}', [\App\Http\Controllers\UniversityController::class, 'destroyUFR'])->name('ufrs.destroy');
+        Route::resource('ufrs', \App\Http\Controllers\University\UFRController::class);
 
         // Routes Départements personnalisées
-        Route::get('departments', [\App\Http\Controllers\UniversityController::class, 'departments'])->name('departments.index');
-        Route::get('departments/create', [\App\Http\Controllers\UniversityController::class, 'createDepartment'])->name('departments.create');
-        Route::post('departments', [\App\Http\Controllers\UniversityController::class, 'storeDepartment'])->name('departments.store');
-        Route::get('departments/{department}', [\App\Http\Controllers\UniversityController::class, 'showDepartment'])->name('departments.show');
-        Route::get('departments/{department}/edit', [\App\Http\Controllers\UniversityController::class, 'editDepartment'])->name('departments.edit');
-        Route::put('departments/{department}', [\App\Http\Controllers\UniversityController::class, 'updateDepartment'])->name('departments.update');
-        Route::delete('departments/{department}', [\App\Http\Controllers\UniversityController::class, 'destroyDepartment'])->name('departments.destroy');
+        Route::resource('departments', \App\Http\Controllers\University\DepartmentController::class);
 
         // Routes Programmes personnalisées
-        Route::get('programs', [\App\Http\Controllers\UniversityController::class, 'programs'])->name('programs.index');
-        Route::get('programs/create', [\App\Http\Controllers\UniversityController::class, 'createProgram'])->name('programs.create');
-        Route::post('programs', [\App\Http\Controllers\UniversityController::class, 'storeProgram'])->name('programs.store');
-        Route::get('programs/{program}', [\App\Http\Controllers\UniversityController::class, 'showProgram'])->name('programs.show');
-        Route::get('programs/{program}/edit', [\App\Http\Controllers\UniversityController::class, 'editProgram'])->name('programs.edit');
-        Route::put('programs/{program}', [\App\Http\Controllers\UniversityController::class, 'updateProgram'])->name('programs.update');
-        Route::delete('programs/{program}', [\App\Http\Controllers\UniversityController::class, 'destroyProgram'])->name('programs.destroy');
+        Route::resource('programs', \App\Http\Controllers\University\ProgramController::class);
 
         // Routes Semestres avec hiérarchie optimisée
         Route::prefix('programs/{program}')->name('programs.')->group(function () {
-            Route::get('semesters', [\App\Http\Controllers\UniversityController::class, 'semesters'])->name('semesters.index');
-            Route::get('semesters/create', [\App\Http\Controllers\UniversityController::class, 'createSemester'])->name('semesters.create');
-            Route::post('semesters', [\App\Http\Controllers\UniversityController::class, 'storeSemester'])->name('semesters.store');
-            Route::get('semesters/{semester}', [\App\Http\Controllers\UniversityController::class, 'showSemester'])->name('semesters.show');
-            Route::get('semesters/{semester}/edit', [\App\Http\Controllers\UniversityController::class, 'editSemester'])->name('semesters.edit');
-            Route::put('semesters/{semester}', [\App\Http\Controllers\UniversityController::class, 'updateSemester'])->name('semesters.update');
-            Route::delete('semesters/{semester}', [\App\Http\Controllers\UniversityController::class, 'destroySemester'])->name('semesters.destroy');
+            Route::get('semesters', [\App\Http\Controllers\University\SemesterController::class, 'index'])->name('semesters.index');
+            Route::get('semesters/create', [\App\Http\Controllers\University\SemesterController::class, 'create'])->name('semesters.create');
+            Route::post('semesters', [\App\Http\Controllers\University\SemesterController::class, 'store'])->name('semesters.store');
+            Route::get('semesters/{semester}', [\App\Http\Controllers\University\SemesterController::class, 'show'])->name('semesters.show');
+            Route::get('semesters/{semester}/edit', [\App\Http\Controllers\University\SemesterController::class, 'edit'])->name('semesters.edit');
+            Route::put('semesters/{semester}', [\App\Http\Controllers\University\SemesterController::class, 'update'])->name('semesters.update');
+            Route::delete('semesters/{semester}', [\App\Http\Controllers\University\SemesterController::class, 'destroy'])->name('semesters.destroy');
         });
 
         // Routes Semestres sans hiérarchie pour les templates existants
-        Route::get('programs/{program}/semesters', [\App\Http\Controllers\UniversityController::class, 'semesters'])->name('programs.semesters.index');
-        Route::get('programs/{program}/semesters/create', [\App\Http\Controllers\UniversityController::class, 'createSemester'])->name('programs.semesters.create');
-        Route::post('programs/{program}/semesters', [\App\Http\Controllers\UniversityController::class, 'storeSemester'])->name('programs.semesters.store');
-        Route::delete('programs/{program}/semesters/{semester}', [\App\Http\Controllers\UniversityController::class, 'destroySemester'])->name('semesters.destroy');
+        Route::get('programs/{program}/semesters', [\App\Http\Controllers\University\SemesterController::class, 'index'])->name('programs.semesters.index');
+        Route::get('programs/{program}/semesters/create', [\App\Http\Controllers\University\SemesterController::class, 'create'])->name('programs.semesters.create');
+        Route::post('programs/{program}/semesters', [\App\Http\Controllers\University\SemesterController::class, 'store'])->name('programs.semesters.store');
+        Route::delete('programs/{program}/semesters/{semester}', [\App\Http\Controllers\University\SemesterController::class, 'destroy'])->name('semesters.destroy');
+        
+        // Routes alternatives pour semestres
+        Route::get('semesters/{semester}', [\App\Http\Controllers\University\SemesterController::class, 'showAlt'])->name('semesters.show.alt');
+        Route::get('semesters/{semester}/edit', [\App\Http\Controllers\University\SemesterController::class, 'editAlt'])->name('semesters.edit.alt');
+        Route::put('semesters/{semester}', [\App\Http\Controllers\University\SemesterController::class, 'updateAlt'])->name('semesters.update.alt');
+        Route::delete('semesters/{semester}', [\App\Http\Controllers\University\SemesterController::class, 'destroyAlt'])->name('semesters.destroy.alt');
 
         // Routes Unités d'Enseignement optimisées
         Route::prefix('semesters/{semester}')->name('semesters.')->group(function () {
-            Route::get('course-units', [\App\Http\Controllers\UniversityController::class, 'courseUnits'])->name('course-units.index');
-            Route::get('course-units/create', [\App\Http\Controllers\UniversityController::class, 'createCourseUnit'])->name('course-units.create');
-            Route::post('course-units', [\App\Http\Controllers\UniversityController::class, 'storeCourseUnit'])->name('course-units.store');
+            Route::get('course-units', [\App\Http\Controllers\University\CourseUnitController::class, 'index'])->name('course-units.index');
+            Route::get('course-units/create', [\App\Http\Controllers\University\CourseUnitController::class, 'create'])->name('course-units.create');
+            Route::post('course-units', [\App\Http\Controllers\University\CourseUnitController::class, 'store'])->name('course-units.store');
         });
         
         // Routes Course Units globales (sans semestre parent)
-        Route::get('course-units/{courseUnit}', [\App\Http\Controllers\UniversityController::class, 'showCourseUnit'])->name('course-units.show');
-        Route::get('course-units/{courseUnit}/edit', [\App\Http\Controllers\UniversityController::class, 'editCourseUnit'])->name('course-units.edit');
-        Route::put('course-units/{courseUnit}', [\App\Http\Controllers\UniversityController::class, 'updateCourseUnit'])->name('course-units.update');
-        Route::delete('course-units/{courseUnit}', [\App\Http\Controllers\UniversityController::class, 'destroyCourseUnit'])->name('course-units.destroy');
+        Route::get('course-units/{courseUnit}', [\App\Http\Controllers\University\CourseUnitController::class, 'show'])->name('course-units.show');
+        Route::get('course-units/{courseUnit}/edit', [\App\Http\Controllers\University\CourseUnitController::class, 'edit'])->name('course-units.edit');
+        Route::put('course-units/{courseUnit}', [\App\Http\Controllers\University\CourseUnitController::class, 'update'])->name('course-units.update');
+        Route::delete('course-units/{courseUnit}', [\App\Http\Controllers\University\CourseUnitController::class, 'destroy'])->name('course-units.destroy');
 
         // Routes ECUE (Éléments Constitutifs d'Unités d'Enseignement)
         Route::prefix('course-units/{courseUnit}')->name('course-units.')->group(function () {
-            Route::get('elements', [\App\Http\Controllers\UniversityController::class, 'showCourseUnitElements'])->name('elements.index');
-            Route::get('elements/create', [\App\Http\Controllers\UniversityController::class, 'createCourseUnitElement'])->name('elements.create');
-            Route::post('elements', [\App\Http\Controllers\UniversityController::class, 'storeCourseUnitElement'])->name('elements.store');
-            Route::get('elements/{element}', [\App\Http\Controllers\UniversityController::class, 'showCourseUnitElement'])->name('elements.show');
-            Route::get('elements/{element}/edit', [\App\Http\Controllers\UniversityController::class, 'editCourseUnitElement'])->name('elements.edit');
-            Route::put('elements/{element}', [\App\Http\Controllers\UniversityController::class, 'updateCourseUnitElement'])->name('elements.update');
-            Route::delete('elements/{element}', [\App\Http\Controllers\UniversityController::class, 'destroyCourseUnitElement'])->name('elements.destroy');
+            Route::get('elements', [\App\Http\Controllers\University\CourseUnitElementController::class, 'index'])->name('elements.index');
+            Route::get('elements/create', [\App\Http\Controllers\University\CourseUnitElementController::class, 'create'])->name('elements.create');
+            Route::post('elements', [\App\Http\Controllers\University\CourseUnitElementController::class, 'store'])->name('elements.store');
+            Route::get('elements/{element}', [\App\Http\Controllers\University\CourseUnitElementController::class, 'show'])->name('elements.show');
+            Route::get('elements/{element}/edit', [\App\Http\Controllers\University\CourseUnitElementController::class, 'edit'])->name('elements.edit');
+            Route::put('elements/{element}', [\App\Http\Controllers\University\CourseUnitElementController::class, 'update'])->name('elements.update');
+            Route::delete('elements/{element}', [\App\Http\Controllers\University\CourseUnitElementController::class, 'destroy'])->name('elements.destroy');
         });
 
         // Routes Enseignants Universitaires - MODULE UNIVERSITAIRE A4
@@ -499,6 +476,19 @@ Route::middleware('auth')->group(function () {
             Route::get('/student-activities', [SupervisionController::class, 'studentActivities'])->name('student-activities');
             Route::get('/user-logs', [SupervisionController::class, 'userLogs'])->name('user-logs');
             Route::get('/chart-data', [SupervisionController::class, 'getDashboardChartData'])->name('chart-data');
+        });
+
+        // CONFIGURATION ÉDUCATIVE - Interface d'administration des paramètres
+        Route::prefix('educational-settings')->name('educational-settings.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Admin\EducationalSettingsController::class, 'index'])->name('index');
+            Route::post('/update', [\App\Http\Controllers\Admin\EducationalSettingsController::class, 'update'])->name('update');
+            Route::post('/preview', [\App\Http\Controllers\Admin\EducationalSettingsController::class, 'preview'])->name('preview');
+            Route::post('/reset', [\App\Http\Controllers\Admin\EducationalSettingsController::class, 'reset'])->name('reset');
+            Route::get('/export', [\App\Http\Controllers\Admin\EducationalSettingsController::class, 'export'])->name('export');
+            Route::post('/import', [\App\Http\Controllers\Admin\EducationalSettingsController::class, 'import'])->name('import');
+            Route::get('/settings', [\App\Http\Controllers\Admin\EducationalSettingsController::class, 'getSettings'])->name('get-settings');
+            Route::get('/report', [\App\Http\Controllers\Admin\EducationalSettingsController::class, 'generateReport'])->name('report');
+            Route::get('/compare', [\App\Http\Controllers\Admin\EducationalSettingsController::class, 'compare'])->name('compare');
         });
     });
 });

@@ -56,10 +56,10 @@ return new class extends Migration
             $table->timestamps();
             
             // Index pour performance
-            $table->index(['unified_student_id', 'academic_year_id']);
-            $table->index(['school_class_id', 'enrollment_status']);
-            $table->index(['enrollment_date']);
-            $table->index(['enrollment_status']);
+            $table->index(['unified_student_id', 'academic_year_id'], 'preuniv_enroll_student_year_idx');
+            $table->index(['school_class_id', 'enrollment_status'], 'preuniv_enroll_class_status_idx');
+            $table->index(['enrollment_date'], 'preuniv_enroll_date_idx');
+            $table->index(['enrollment_status'], 'preuniv_enroll_status_idx');
             
             // Contrainte d'unicité : un étudiant par classe par année
             $table->unique(['unified_student_id', 'school_class_id', 'academic_year_id'], 'unique_student_class_year');

@@ -48,7 +48,7 @@ class PreUniversityStudentDashboardController extends Controller
      * Afficher le dashboard élève préuniversitaire
      * 
      * @param Request $request
-     * @return \Illuminate\View\View
+     * @return \Illuminate\View\View|\Illuminate\Http\RedirectResponse
      */
     public function index(Request $request)
     {

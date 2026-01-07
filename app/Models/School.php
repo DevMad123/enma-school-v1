@@ -46,6 +46,14 @@ class School extends Model
     }
 
     /**
+     * Relation avec les paramètres éducatifs
+     */
+    public function educationalSettings()
+    {
+        return $this->hasMany(EducationalSetting::class);
+    }
+
+    /**
      * Relation avec les années académiques
      */
     public function academicYears()
@@ -193,7 +201,7 @@ class School extends Model
      */
     public static function getCurrentContext(): ?School
     {
-        return app('current_school', null);
+        return app()->bound('current_school') ? app('current_school') : null;
     }
 
     /**
@@ -206,6 +214,29 @@ class School extends Model
     public static function getDefaultActiveSchool(): ?School
     {
         return static::active()->first();
+    }
+
+    /**
+     * Obtenir l'école active courante
+     * 
+     * @return School|null
+     */
+    public static function getActiveSchool(): ?School
+    {
+        // Essayer d'abord d'obtenir l'école depuis le contexte courant
+        $school = static::getCurrentContext();
+        
+        // Si pas de contexte, essayer d'obtenir pour l'utilisateur authentifié
+        if (!$school && auth()->check()) {
+            $school = static::getForUser(auth()->user());
+        }
+        
+        // En dernier recours, obtenir la première école active directement
+        if (!$school) {
+            $school = static::active()->first();
+        }
+        
+        return $school;
     }
 
     /**
@@ -356,7 +387,6 @@ class School extends Model
             default => 'Non défini'
         };
     }
-
     /**
      * Obtenir les niveaux éducatifs configurés avec leurs libellés
      */

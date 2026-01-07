@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('layouts.dashboard')
 
 @section('title', 'Dashboard Enseignant')
 
@@ -67,43 +67,45 @@
     </div>
 
     <!-- Planning du Jour et Classes -->
-    <div class="row mb-4">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         <!-- Planning d'Aujourd'hui -->
-        <div class="col-lg-6 mb-3">
-            <div class="card dashboard-card h-100">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0">
-                        <i class="fas fa-clock me-2"></i>
+        <div>
+            <div class="bg-white rounded-lg shadow-lg overflow-hidden h-full">
+                <div class="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 py-4">
+                    <h5 class="text-lg font-semibold flex items-center">
+                        <i class="fas fa-clock mr-2"></i>
                         Planning d'Aujourd'hui
                     </h5>
                 </div>
-                <div class="card-body">
+                <div class="p-6">
                     @if(isset($schedule_today) && count($schedule_today) > 0)
-                        @foreach($schedule_today as $schedule)
-                            <div class="schedule-item {{ $schedule['is_current'] ? 'current' : '' }}">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <h6 class="mb-1">{{ $schedule['subject'] ?? 'Matière' }}</h6>
-                                        <p class="text-muted mb-0">
-                                            {{ $schedule['class_name'] ?? 'Classe' }} • 
-                                            {{ $schedule['room'] ?? 'Salle TBD' }}
-                                        </p>
-                                    </div>
-                                    <div class="text-end">
-                                        <span class="badge bg-secondary">
-                                            {{ $schedule['time'] ?? '08h00' }}
-                                        </span>
-                                        @if($schedule['is_current'])
-                                            <span class="badge bg-danger ms-1">En cours</span>
-                                        @endif
+                        <div class="space-y-4">
+                            @foreach($schedule_today as $schedule)
+                                <div class="border-l-4 {{ $schedule['is_current'] ? 'border-blue-500 bg-blue-50' : 'border-gray-300' }} p-4 rounded-r-lg">
+                                    <div class="flex justify-between items-center">
+                                        <div>
+                                            <h6 class="font-semibold text-gray-900">{{ $schedule['subject'] ?? 'Matière' }}</h6>
+                                            <p class="text-gray-600 text-sm">
+                                                {{ $schedule['class_name'] ?? 'Classe' }} • 
+                                                {{ $schedule['room'] ?? 'Salle TBD' }}
+                                            </p>
+                                        </div>
+                                        <div class="text-right">
+                                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                                {{ $schedule['time'] ?? '08h00' }}
+                                            </span>
+                                            @if($schedule['is_current'])
+                                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 ml-1">En cours</span>
+                                            @endif
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        @endforeach
+                            @endforeach
+                        </div>
                     @else
-                        <div class="text-center py-4">
-                            <i class="fas fa-calendar-times fa-3x text-muted mb-3"></i>
-                            <p class="text-muted">Aucun cours programmé aujourd'hui.</p>
+                        <div class="text-center py-8">
+                            <i class="fas fa-calendar-times text-4xl text-gray-400 mb-3"></i>
+                            <p class="text-gray-500">Aucun cours programmé aujourd'hui.</p>
                         </div>
                     @endif
                 </div>
@@ -111,44 +113,50 @@
         </div>
         
         <!-- Mes Classes -->
-        <div class="col-lg-6 mb-3">
-            <div class="card dashboard-card h-100">
-                <div class="card-header">
-                    <h5 class="mb-0">
-                        <i class="fas fa-users me-2"></i>
+        <div>
+            <div class="bg-white rounded-lg shadow-lg overflow-hidden h-full">
+                <div class="border-b border-gray-200 px-6 py-4">
+                    <h5 class="text-lg font-semibold text-gray-900 flex items-center">
+                        <i class="fas fa-users mr-2 text-gray-600"></i>
                         Mes Classes
                     </h5>
                 </div>
-                <div class="card-body">
+                <div class="p-6">
                     @if(isset($classes_assigned) && count($classes_assigned) > 0)
-                        @foreach($classes_assigned as $class)
-                            <div class="card class-card mb-3">
-                                <div class="card-body py-2">
-                                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="space-y-4">
+                            @foreach($classes_assigned as $class)
+                                <div class="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors">
+                                    <div class="flex justify-between items-center">
                                         <div>
-                                            <h6 class="mb-1">{{ $class['name'] ?? 'Classe' }}</h6>
-                                            <p class="text-muted small mb-0">
+                                            <h6 class="font-semibold text-gray-900">{{ $class['name'] ?? 'Classe' }}</h6>
+                                            <p class="text-gray-600 text-sm">
                                                 {{ $class['subject'] ?? 'Matière' }} • 
                                                 {{ $class['students_count'] ?? 0 }} étudiant(s)
                                             </p>
                                         </div>
-                                        <div class="text-end">
-                                            <span class="badge performance-badge {{ $class['performance_level'] ?? 'bg-secondary' }}">
+                                        <div class="flex items-center space-x-2">
+                                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium 
+                                                @switch($class['performance_level'] ?? 'bg-secondary')
+                                                    @case('bg-success') bg-green-100 text-green-800 @break
+                                                    @case('bg-warning') bg-yellow-100 text-yellow-800 @break
+                                                    @case('bg-danger') bg-red-100 text-red-800 @break
+                                                    @default bg-gray-100 text-gray-800
+                                                @endswitch">
                                                 {{ $class['performance_text'] ?? 'N/A' }}
                                             </span>
                                             <a href="{{ route('teacher.classes.show', $class['id'] ?? 1) }}" 
-                                               class="btn btn-sm btn-outline-primary ms-2">
+                                               class="text-blue-600 hover:text-blue-800 text-sm font-medium">
                                                 Voir
                                             </a>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                        @endforeach
+                            @endforeach
+                        </div>
                     @else
-                        <div class="text-center py-4">
-                            <i class="fas fa-chalkboard fa-3x text-muted mb-3"></i>
-                            <p class="text-muted">Aucune classe assignée.</p>
+                        <div class="text-center py-8">
+                            <i class="fas fa-chalkboard text-4xl text-gray-400 mb-3"></i>
+                            <p class="text-gray-500">Aucune classe assignée.</p>
                         </div>
                     @endif
                 </div>
@@ -157,50 +165,50 @@
     </div>
 
     <!-- Évaluations Récentes et Tâches Pendantes -->
-    <div class="row mb-4">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
         <!-- Évaluations Récentes -->
-        <div class="col-lg-7 mb-3">
-            <div class="card dashboard-card h-100">
-                <div class="card-header">
-                    <h5 class="mb-0">
-                        <i class="fas fa-chart-bar me-2"></i>
+        <div class="lg:col-span-2">
+            <div class="bg-white rounded-lg shadow-lg overflow-hidden h-full">
+                <div class="border-b border-gray-200 px-6 py-4">
+                    <h5 class="text-lg font-semibold text-gray-900 flex items-center">
+                        <i class="fas fa-chart-bar mr-2 text-gray-600"></i>
                         Dernières Évaluations
                     </h5>
                 </div>
-                <div class="card-body">
+                <div class="p-6">
                     @if(isset($recent_evaluations) && count($recent_evaluations) > 0)
-                        <div class="table-responsive">
-                            <table class="table table-hover">
-                                <thead>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50">
                                     <tr>
-                                        <th>Évaluation</th>
-                                        <th>Classe</th>
-                                        <th>Moyenne</th>
-                                        <th>Participation</th>
-                                        <th>Date</th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Évaluation</th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Classe</th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Moyenne</th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Participation</th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
                                     </tr>
                                 </thead>
-                                <tbody>
+                                <tbody class="bg-white divide-y divide-gray-200">
                                     @foreach($recent_evaluations as $evaluation)
-                                        <tr>
-                                            <td>{{ $evaluation['title'] ?? 'Évaluation' }}</td>
-                                            <td>{{ $evaluation['class'] ?? 'Classe' }}</td>
-                                            <td>
-                                                <span class="badge {{ $evaluation['average'] >= 10 ? 'bg-success' : 'bg-warning' }}">
+                                        <tr class="hover:bg-gray-50">
+                                            <td class="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ $evaluation['title'] ?? 'Évaluation' }}</td>
+                                            <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-600">{{ $evaluation['class'] ?? 'Classe' }}</td>
+                                            <td class="px-4 py-4 whitespace-nowrap">
+                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ ($evaluation['average'] ?? 0) >= 10 ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800' }}">
                                                     {{ $evaluation['average'] ?? 'N/A' }}/20
                                                 </span>
                                             </td>
-                                            <td>{{ $evaluation['participation'] ?? 0 }}%</td>
-                                            <td class="text-muted">{{ $evaluation['date'] ?? now()->format('d/m') }}</td>
+                                            <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-600">{{ $evaluation['participation'] ?? 0 }}%</td>
+                                            <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-500">{{ $evaluation['date'] ?? now()->format('d/m') }}</td>
                                         </tr>
                                     @endforeach
                                 </tbody>
                             </table>
                         </div>
                     @else
-                        <div class="text-center py-4">
-                            <i class="fas fa-chart-line fa-3x text-muted mb-3"></i>
-                            <p class="text-muted">Aucune évaluation récente.</p>
+                        <div class="text-center py-8">
+                            <i class="fas fa-chart-line text-4xl text-gray-400 mb-3"></i>
+                            <p class="text-gray-500">Aucune évaluation récente.</p>
                         </div>
                     @endif
                 </div>
@@ -208,34 +216,36 @@
         </div>
         
         <!-- Tâches Pendantes -->
-        <div class="col-lg-5 mb-3">
-            <div class="card dashboard-card h-100">
-                <div class="card-header bg-warning">
-                    <h5 class="mb-0 text-dark">
-                        <i class="fas fa-tasks me-2"></i>
+        <div>
+            <div class="bg-white rounded-lg shadow-lg overflow-hidden h-full">
+                <div class="bg-gradient-to-r from-yellow-500 to-yellow-600 text-white px-6 py-4">
+                    <h5 class="text-lg font-semibold flex items-center">
+                        <i class="fas fa-tasks mr-2"></i>
                         Tâches à Accomplir
                     </h5>
                 </div>
-                <div class="card-body">
+                <div class="p-6">
                     @if(isset($pending_tasks) && count($pending_tasks) > 0)
-                        @foreach($pending_tasks as $task)
-                            <div class="border-start border-{{ $task['priority_color'] ?? 'secondary' }} border-3 ps-3 mb-3">
-                                <h6 class="mb-1">{{ $task['title'] ?? 'Tâche' }}</h6>
-                                <p class="text-muted small mb-1">{{ $task['description'] ?? 'Description' }}</p>
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <small class="text-muted">{{ $task['deadline'] ?? 'Date limite TBD' }}</small>
-                                    @if(isset($task['route']))
-                                        <a href="{{ route($task['route']) }}" class="btn btn-sm btn-outline-primary">
-                                            Traiter
-                                        </a>
-                                    @endif
+                        <div class="space-y-4">
+                            @foreach($pending_tasks as $task)
+                                <div class="border-l-4 {{ $task['priority_color'] === 'danger' ? 'border-red-500' : ($task['priority_color'] === 'warning' ? 'border-yellow-500' : 'border-blue-500') }} pl-4 py-3 bg-gray-50 rounded-r-lg">
+                                    <h6 class="font-semibold text-gray-900 mb-1">{{ $task['title'] ?? 'Tâche' }}</h6>
+                                    <p class="text-gray-600 text-sm mb-2">{{ $task['description'] ?? 'Description' }}</p>
+                                    <div class="flex justify-between items-center">
+                                        <small class="text-gray-500">{{ $task['deadline'] ?? 'Date limite TBD' }}</small>
+                                        @if(isset($task['route']))
+                                            <a href="{{ route($task['route']) }}" class="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                                                Traiter
+                                            </a>
+                                        @endif
+                                    </div>
                                 </div>
-                            </div>
-                        @endforeach
+                            @endforeach
+                        </div>
                     @else
-                        <div class="text-center py-4">
-                            <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
-                            <p class="text-success">Toutes les tâches sont à jour !</p>
+                        <div class="text-center py-8">
+                            <i class="fas fa-check-circle text-4xl text-green-500 mb-3"></i>
+                            <p class="text-green-600">Toutes les tâches sont à jour !</p>
                         </div>
                     @endif
                 </div>
@@ -244,54 +254,46 @@
     </div>
 
     <!-- Actions Rapides -->
-    <div class="row">
-        <div class="col-12">
-            <div class="card dashboard-card">
-                <div class="card-header">
-                    <h5 class="mb-0">
-                        <i class="fas fa-bolt me-2"></i>
-                        Actions Rapides
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        @can('manage_evaluations')
-                        <div class="col-lg-3 col-md-6 mb-3">
-                            <a href="{{ route('teacher.evaluations.create') }}" class="btn btn-outline-primary w-100 h-100">
-                                <i class="fas fa-plus-circle d-block mb-2 fa-2x"></i>
-                                <span class="d-block">Nouvelle Évaluation</span>
-                            </a>
-                        </div>
-                        @endcan
-                        
-                        @can('view_student_grades')
-                        <div class="col-lg-3 col-md-6 mb-3">
-                            <a href="{{ route('teacher.grades.index') }}" class="btn btn-outline-success w-100 h-100">
-                                <i class="fas fa-clipboard-list d-block mb-2 fa-2x"></i>
-                                <span class="d-block">Saisie des Notes</span>
-                            </a>
-                        </div>
-                        @endcan
-                        
-                        @can('view_schedule')
-                        <div class="col-lg-3 col-md-6 mb-3">
-                            <a href="{{ route('teacher.schedule.index') }}" class="btn btn-outline-info w-100 h-100">
-                                <i class="fas fa-calendar d-block mb-2 fa-2x"></i>
-                                <span class="d-block">Mon Planning</span>
-                            </a>
-                        </div>
-                        @endcan
-                        
-                        @can('manage_classes')
-                        <div class="col-lg-3 col-md-6 mb-3">
-                            <a href="{{ route('teacher.classes.index') }}" class="btn btn-outline-warning w-100 h-100">
-                                <i class="fas fa-users d-block mb-2 fa-2x"></i>
-                                <span class="d-block">Gestion Classes</span>
-                            </a>
-                        </div>
-                        @endcan
-                    </div>
-                </div>
+    <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+        <div class="border-b border-gray-200 px-6 py-4">
+            <h5 class="text-lg font-semibold text-gray-900 flex items-center">
+                <i class="fas fa-bolt mr-2 text-yellow-500"></i>
+                Actions Rapides
+            </h5>
+        </div>
+        <div class="p-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                @can('manage_evaluations')
+                <a href="{{ route('teacher.evaluations.create') }}" 
+                   class="flex flex-col items-center justify-center p-6 border-2 border-dashed border-blue-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors group">
+                    <i class="fas fa-plus-circle text-4xl text-blue-500 group-hover:text-blue-600 mb-3"></i>
+                    <span class="text-blue-700 group-hover:text-blue-800 font-medium">Nouvelle Évaluation</span>
+                </a>
+                @endcan
+                
+                @can('view_student_grades')
+                <a href="{{ route('teacher.grades.index') }}" 
+                   class="flex flex-col items-center justify-center p-6 border-2 border-dashed border-green-300 rounded-lg hover:border-green-500 hover:bg-green-50 transition-colors group">
+                    <i class="fas fa-clipboard-list text-4xl text-green-500 group-hover:text-green-600 mb-3"></i>
+                    <span class="text-green-700 group-hover:text-green-800 font-medium">Saisie des Notes</span>
+                </a>
+                @endcan
+                
+                @can('view_schedule')
+                <a href="{{ route('teacher.schedule.index') }}" 
+                   class="flex flex-col items-center justify-center p-6 border-2 border-dashed border-cyan-300 rounded-lg hover:border-cyan-500 hover:bg-cyan-50 transition-colors group">
+                    <i class="fas fa-calendar text-4xl text-cyan-500 group-hover:text-cyan-600 mb-3"></i>
+                    <span class="text-cyan-700 group-hover:text-cyan-800 font-medium">Mon Planning</span>
+                </a>
+                @endcan
+                
+                @can('manage_classes')
+                <a href="{{ route('teacher.classes.index') }}" 
+                   class="flex flex-col items-center justify-center p-6 border-2 border-dashed border-yellow-300 rounded-lg hover:border-yellow-500 hover:bg-yellow-50 transition-colors group">
+                    <i class="fas fa-users text-4xl text-yellow-500 group-hover:text-yellow-600 mb-3"></i>
+                    <span class="text-yellow-700 group-hover:text-yellow-800 font-medium">Gestion Classes</span>
+                </a>
+                @endcan
             </div>
         </div>
     </div>
@@ -305,8 +307,7 @@
         const now = new Date();
         const currentTime = now.getHours() + ':' + String(now.getMinutes()).padStart(2, '0');
         
-        $('.schedule-item').removeClass('current');
-        // TODO: Logique pour marquer le cours actuel
+        // TODO: Logique pour marquer le cours actuel avec Tailwind CSS
         
         console.log('Dashboard teacher - mise à jour du planning...', currentTime);
     }
@@ -316,10 +317,29 @@
 
     // Animation au chargement
     $(document).ready(function() {
-        $('.dashboard-card').hide().fadeIn(500);
-        
-        // Tooltip pour les badges de performance
-        $('[data-bs-toggle="tooltip"]').tooltip();
+        // Animation des cartes au chargement
+        $('.transform').each(function(index) {
+            $(this).delay(index * 100).queue(function() {
+                $(this).addClass('animate-fadeInUp').dequeue();
+            });
+        });
     });
 </script>
+
+<style>
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translate3d(0, 20px, 0);
+    }
+    to {
+        opacity: 1;
+        transform: translate3d(0, 0, 0);
+    }
+}
+
+.animate-fadeInUp {
+    animation: fadeInUp 0.5s ease-out forwards;
+}
+</style>
 @endpush

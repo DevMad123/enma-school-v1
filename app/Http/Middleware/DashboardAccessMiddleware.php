@@ -6,6 +6,7 @@ use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use App\Services\SchoolContextService;
 
 /**
@@ -52,6 +53,16 @@ class DashboardAccessMiddleware
         }
 
         $user = Auth::user();
+
+        // Debug logging
+        Log::info('DashboardAccessMiddleware Debug', [
+            'user_email' => $user->email,
+            'dashboard_type' => $dashboardType,
+            'user_roles' => $user->getRoleNames()->toArray(),
+            'has_super_admin' => $user->hasRole('super_admin'),
+            'has_any_admin_role' => $user->hasAnyRole(['super_admin', 'admin', 'directeur']),
+            'access_check_result' => $dashboardType ? $this->hasAccessToDashboard($user, $dashboardType) : 'no_dashboard_type'
+        ]);
 
         // Si un type de dashboard spécifique est requis, vérifier les permissions
         if ($dashboardType && !$this->hasAccessToDashboard($user, $dashboardType)) {

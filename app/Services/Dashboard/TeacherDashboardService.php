@@ -109,4 +109,53 @@ class TeacherDashboardService
     {
         return [];
     }
+
+    protected function getAssignedClasses(Teacher $teacher): \Illuminate\Database\Eloquent\Collection
+    {
+        return $this->getTeacherAssignments($teacher);
+    }
+
+    protected function getTodaySchedule(Teacher $teacher): array
+    {
+        // TODO: Implémenter la logique pour récupérer l'emploi du temps du jour
+        return [];
+    }
+
+    protected function getUpcomingClasses(Teacher $teacher): array
+    {
+        // TODO: Implémenter la logique pour récupérer les prochains cours
+        return [];
+    }
+
+    protected function getStudentStatistics(Teacher $teacher): array
+    {
+        // TODO: Implémenter la logique pour les statistiques des étudiants
+        return [
+            'total_students' => 0,
+            'present_today' => 0,
+            'absent_today' => 0,
+        ];
+    }
+
+    protected function getRecentEvaluations(Teacher $teacher): array
+    {
+        // TODO: Implémenter la logique pour récupérer les évaluations récentes
+        return [];
+    }
+
+    protected function getPendingTasks(Teacher $teacher): array
+    {
+        // TODO: Implémenter la logique pour récupérer les tâches en attente
+        return [];
+    }
+
+    protected function getPerformanceSummary(Teacher $teacher): array
+    {
+        // TODO: Implémenter la logique pour le résumé des performances
+        return [
+            'average_class_performance' => 0,
+            'improvement_areas' => [],
+            'achievements' => [],
+        ];
+    }
 }

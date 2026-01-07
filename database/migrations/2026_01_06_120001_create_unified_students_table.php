@@ -43,7 +43,6 @@ return new class extends Migration
             $table->timestamps();
             
             // Index pour performance
-            $table->index(['studentable_type', 'studentable_id']);
             $table->index(['student_number', 'student_status']);
             $table->index(['person_id', 'student_status']);
         });

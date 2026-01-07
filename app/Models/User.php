@@ -173,6 +173,40 @@ class User extends Authenticatable
     }
 
     /**
+     * Récupère le rôle principal de l'utilisateur dans une école
+     */
+    public function getRoleInSchool(School $school): ?string
+    {
+        // Si l'utilisateur n'est pas associé à cette école, retourne null
+        if ($this->school_id !== $school->id && !$this->hasRole('super-admin')) {
+            return null;
+        }
+
+        // Récupère le premier rôle actif
+        $role = $this->roles()->first();
+        return $role ? $role->name : null;
+    }
+
+    /**
+     * Récupère les permissions de l'utilisateur dans une école
+     */
+    public function getPermissionsInSchool(School $school): array
+    {
+        // Si l'utilisateur n'est pas associé à cette école
+        if ($this->school_id !== $school->id && !$this->hasRole('super-admin')) {
+            return [];
+        }
+
+        // Super admin a toutes les permissions
+        if ($this->hasRole('super-admin')) {
+            return ['admin.all'];
+        }
+
+        // Récupère les permissions via les rôles
+        return $this->getAllPermissions()->pluck('name')->toArray();
+    }
+
+    /**
      * Méthodes utilitaires pour les logs
      */
     public function logActivity(string $entity, $entityId, string $action, array $properties = [])

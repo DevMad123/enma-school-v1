@@ -38,7 +38,7 @@ class AdminDashboardController extends Controller
     public function __construct(AdminDashboardService $dashboardService)
     {
         $this->middleware(['auth', 'school.context']);
-        $this->middleware('can:access_admin_dashboard');
+        $this->middleware('can:view_dashboard');
         
         $this->dashboardService = $dashboardService;
     }

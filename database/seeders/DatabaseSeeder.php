@@ -28,6 +28,7 @@ class DatabaseSeeder extends Seeder
             UniversityProgramSeeder::class,    // Programmes d'études universitaires
             UniversitySemesterSeeder::class,   // Semestres universitaires
             SubjectSeeder::class,              // Matières
+            DefaultEducationalSettingsSeeder::class, // Paramètres éducatifs par défaut
             AdminUsersSeeder::class,           // Utilisateurs administrateurs
             UsersAndStudentsSeeder::class,     // Étudiants et personnel de base
             // MODULE A4 — PERSONNEL & AFFECTATIONS PÉDAGOGIQUES

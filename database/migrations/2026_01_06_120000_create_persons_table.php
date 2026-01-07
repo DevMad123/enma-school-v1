@@ -44,7 +44,8 @@ return new class extends Migration
             // Index pour performance
             $table->index(['school_id', 'status']);
             $table->index(['matricule', 'school_id']);
-            $table->index(['first_name', 'last_name']);
+            $table->index('first_name');
+            $table->index('last_name');
         });
     }
 

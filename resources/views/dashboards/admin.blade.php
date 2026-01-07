@@ -1,24 +1,25 @@
 @extends('layouts.dashboard')
 
-@section('title', 'Dashboard Administrateur')
+@section('title', 'Dashboard Administration')
 
 @section('content')
-    <div class="space-y-6">
-        <!-- Page Header -->
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <!-- En-tête Dashboard -->
+    <div class="mb-6">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
             <div>
-                <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Dashboard Administrateur</h1>
-                <p class="text-gray-600 dark:text-gray-400 mt-2">Vue d'ensemble de l'établissement ENMA School</p>
+                <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-1">Dashboard Administration</h1>
+                <p class="text-gray-600 dark:text-gray-400">
+                    Vue d'ensemble et pilotage de l'établissement • 
+                    <span class="font-semibold">{{ $overview_stats['school_context'] ?? 'ENMA School' }}</span>
+                </p>
             </div>
-            <div class="mt-4 sm:mt-0">
-                <button class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-200">
-                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                    </svg>
-                    Actions rapides
-                </button>
+            <div class="mt-3 sm:mt-0 text-right">
+                <div class="text-gray-500 text-sm">Dernière mise à jour</div>
+                <div class="font-bold text-gray-900 dark:text-white">{{ now()->format('d/m/Y H:i') }}</div>
             </div>
         </div>
+    </div>
 
         <!-- Stats Grid -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

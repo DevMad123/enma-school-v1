@@ -20,7 +20,8 @@ return new class extends Migration
             $table->foreignId('educational_subject_id')->constrained('educational_subjects')->onDelete('cascade');
             
             // Référence polymorphique au contexte éducatif
-            $table->nullableMorphs('evaluation_context'); // Pour Grade Period ou Academic Period
+            $table->string('evaluation_context_type')->nullable();
+            $table->unsignedBigInteger('evaluation_context_id')->nullable();
             
             // Informations de l'évaluation
             $table->string('title');
@@ -91,7 +92,7 @@ return new class extends Migration
             $table->index(['school_id', 'educational_context']);
             $table->index(['educational_subject_id', 'status']);
             $table->index(['evaluation_date', 'evaluation_type']);
-            $table->index(['evaluation_context_type', 'evaluation_context_id']);
+            $table->index(['evaluation_context_type', 'evaluation_context_id'], 'unified_eval_context_idx');
             $table->index(['is_published']);
             $table->index(['created_by']);
         });
