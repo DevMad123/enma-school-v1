@@ -21,25 +21,27 @@ class SchoolFactory extends Factory
     {
         return [
             'name' => $this->faker->company . ' School',
-            'code' => $this->faker->unique()->regexify('[A-Z]{2}[0-9]{3}'),
-            'type' => $this->faker->randomElement(['preuniversity', 'university']),
-            'address' => $this->faker->address,
-            'phone' => $this->faker->phoneNumber,
+            'short_name' => $this->faker->optional()->lexify('??'),
+            'type' => $this->faker->randomElement(['pre_university', 'university']),
             'email' => $this->faker->unique()->safeEmail,
-            'principal_name' => $this->faker->name,
-            'status' => 'active',
-            'established_at' => $this->faker->date,
+            'phone' => $this->faker->phoneNumber,
+            'address' => $this->faker->address,
+            'city' => $this->faker->city,
+            'country' => 'Côte d\'Ivoire',
+            'academic_system' => $this->faker->randomElement(['trimestre', 'semestre']),
+            'grading_system' => $this->faker->randomElement(['20', '100', 'custom']),
+            'is_active' => true,
         ];
     }
 
     /**
-     * Indicate that the school is a preuniversity school.
+     * Indicate that the school is a pre-university school.
      */
-    public function preuniversity(): static
+    public function preUniversity(): static
     {
         return $this->state(fn (array $attributes) => [
-            'type' => 'preuniversity',
-            'name' => $this->faker->company . ' College',
+            'type' => 'pre_university',
+            'educational_levels' => ['primary', 'secondary'],
         ]);
     }
 
@@ -50,7 +52,7 @@ class SchoolFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'type' => 'university',
-            'name' => 'Université ' . $this->faker->city,
+            'educational_levels' => ['undergraduate', 'graduate'],
         ]);
     }
 
@@ -60,7 +62,7 @@ class SchoolFactory extends Factory
     public function inactive(): static
     {
         return $this->state(fn (array $attributes) => [
-            'status' => 'inactive',
+            'is_active' => false,
         ]);
     }
 }

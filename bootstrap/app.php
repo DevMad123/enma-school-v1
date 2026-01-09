@@ -19,6 +19,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
             'school.context' => \App\Http\Middleware\SchoolContextMiddleware::class, // ✅ Nouveau middleware central
             'dashboard.access' => \App\Http\Middleware\DashboardAccessMiddleware::class, // ✅ Dashboard access control
+            'educational_context' => \App\Http\Middleware\EducationalContextMiddleware::class, // ✅ Contexte éducatif unifié
             'admin.access' => \App\Http\Middleware\AdminAccess::class,
             'university' => \App\Http\Middleware\UniversityContextMiddleware::class, // ✅ Contexte universitaire
             'pre_university' => \App\Http\Middleware\PreUniversityContextMiddleware::class, // ✅ Contexte préuniversitaire

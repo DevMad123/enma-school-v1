@@ -10,6 +10,8 @@ use App\Http\Controllers\Staff\StaffDashboardController;
 use App\Http\Controllers\Teacher\TeacherDashboardController;
 use App\Http\Controllers\Student\UniversityStudentDashboardController;
 use App\Http\Controllers\Student\PreUniversityStudentDashboardController;
+use App\Http\Controllers\Academic\PreUniversityDashboardController;
+use App\Http\Controllers\Academic\AcademicDashboardController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\RoleController;
@@ -130,6 +132,21 @@ Route::middleware(['auth', 'verified', 'dashboard.access:preuniversity_student',
     // API Routes
     Route::get('/api/grades-data', [PreUniversityStudentDashboardController::class, 'getGradesData'])->name('api.grades-data');
     Route::get('/api/bulletin-data', [PreUniversityStudentDashboardController::class, 'getBulletinData'])->name('api.bulletin-data');
+});
+
+// Route de redirection intelligente vers le dashboard académique approprié
+Route::middleware(['auth', 'verified', 'educational_context'])->group(function () {
+    Route::get('/academic/dashboard', [AcademicDashboardController::class, 'redirect'])->name('academic.dashboard.redirect');
+});
+
+// Dashboard Préuniversitaire - Administration et Enseignants
+Route::middleware(['auth', 'verified', 'educational_context:preuniversity'])->prefix('academic/preuniversity/dashboard')->name('academic.preuniversity.dashboard.')->group(function () {
+    Route::get('/', [PreUniversityDashboardController::class, 'index'])->name('index');
+    
+    // API Routes pour données dynamiques
+    Route::get('/api/stats', [PreUniversityDashboardController::class, 'getStats'])->name('api.stats');
+    Route::get('/api/level-metrics', [PreUniversityDashboardController::class, 'getLevelMetrics'])->name('api.level-metrics');
+    Route::get('/api/alerts', [PreUniversityDashboardController::class, 'getAlerts'])->name('api.alerts');
 });
 
 // ===================================================================

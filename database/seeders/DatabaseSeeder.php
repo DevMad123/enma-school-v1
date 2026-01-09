@@ -15,7 +15,16 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // Exécuter les seeders dans l'ordre logique
+        // Environnement de test - Données essentielles seulement
+        if (app()->environment(['testing', 'local'])) {
+            $this->call([
+                TestEnvironmentSeeder::class,              // Rôles, permissions, écoles et users de test
+                // DefaultEducationalSettingsSeeder::class,  // Configuration éducative par défaut (désactivé temporairement)
+            ]);
+            return;
+        }
+
+        // Environnement de production - Seeders complets
         $this->call([
             RolesAndPermissionsSeeder::class,  // D'abord créer les rôles et permissions
             SchoolSeeder::class,               // Créer les écoles
